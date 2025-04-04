@@ -27,7 +27,13 @@ A powerful and customizable Flutter widget for multi-selection and animated reor
 - **Auto-scrolling**: Automatically scrolls when dragging near edges
 - **Header & Footer Support**: Add custom widgets above and below the list
 
-![Demo Animation](https://via.placeholder.com/350x200.png?text=Multi+Reorderable+Demo)
+## Examples
+
+### Simple Usage
+![Simple Example](https://imgur.com/a/NwxcbVg)
+
+### Advanced Usage
+![Advanced Example](https://imgur.com/a/FD2WELG)
 
 ## Installation
 

@@ -1,7 +1,8 @@
 name: multi_reorderable
-description: "A new Flutter package project."
+description: "A Flutter package for multi-selection and animated reordering of items."
 version: 0.0.1
 homepage:
+repository: "https://github.com/abdelrahman-atef1/multi_reorderable"
 
 environment:
   sdk: ^3.5.1
