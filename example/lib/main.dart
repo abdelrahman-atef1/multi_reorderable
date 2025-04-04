@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multi_reorderable/reorderable_multi_select.dart';
+import 'package:multi_reorderable/multi_reorderable.dart';
 
 void main() {
   runApp(const MyApp());
@@ -107,7 +107,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
         children: [
           // Basic usage example
           Expanded(
-            child: ReorderableMultiSelectList<ItemData>(
+            child: ReorderableMultiDragList<ItemData>(
               items: items,
               itemBuilder: (context, item, index, isSelected, isDragging) {
                 return ListTile(
@@ -119,13 +119,9 @@ class _ExampleScreenState extends State<ExampleScreen> {
                   ),
                 );
               },
-              onReorder: (oldIndex, newIndex) {
+              onReorder: (reorderedItems) {
                 setState(() {
-                  if (oldIndex < newIndex) {
-                    newIndex -= 1;
-                  }
-                  final item = items.removeAt(oldIndex);
-                  items.insert(newIndex, item);
+                  items = reorderedItems;
                 });
               },
               onSelectionChanged: (selected) {
@@ -148,6 +144,12 @@ class _ExampleScreenState extends State<ExampleScreen> {
               selectionCountText: 'Selected {} items',
               itemHeight: 80.0,
               showDividers: true,
+              theme: ReorderableMultiDragTheme(
+                selectionBarColor: Theme.of(context).colorScheme.surface,
+                selectedItemColor: Theme.of(context).colorScheme.primaryContainer,
+                itemColor: Theme.of(context).colorScheme.surface,
+                draggedItemBorderColor: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ],
@@ -215,23 +217,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
   List<TaskItem> selectedTasks = [];
 
   // Custom theme
-  late ReorderableMultiSelectTheme customTheme;
-
-  // Animation config
-  final animationConfig = const ReorderableAnimationConfig(
-    collectAnimationDuration: Duration(milliseconds: 400),
-    reorderAnimationDuration: Duration(milliseconds: 300),
-    dragAnimationDuration: Duration(milliseconds: 200),
-    collectAnimationCurve: Curves.easeOutQuart,
-  );
-
-  // Stack config
-  final stackConfig = const ReorderableStackConfig(
-    stackOffset: Offset(6, 6),
-    maxStackOffset: 12.0,
-    maxStackRotation: 3.0,
-    maxStackItems: 4,
-  );
+  late ReorderableMultiDragTheme customTheme;
 
   @override
   void initState() {
@@ -244,49 +230,16 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Create custom theme based on app theme
-    customTheme = ReorderableMultiSelectTheme(
-      primaryColor: Theme.of(context).colorScheme.primary,
-      itemBackgroundColor: Theme.of(context).colorScheme.surface,
-      selectedItemBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      dividerColor: Theme.of(context).dividerColor,
-      itemTextStyle: Theme.of(context).textTheme.bodyLarge!,
-      selectionCountTextStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      doneButtonTextStyle: Theme.of(context).textTheme.labelLarge!.copyWith(
-        color: Theme.of(context).colorScheme.onPrimary,
-      ),
-      cardElevation: 2.0,
-      draggedCardElevation: 8.0,
-      itemBorderRadius: BorderRadius.circular(12.0),
-      itemPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      listPadding: const EdgeInsets.all(16.0),
-      listDecoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.background,
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      headerDecoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16.0),
-          topRight: Radius.circular(16.0),
-        ),
-      ),
-      footerDecoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(16.0),
-          bottomRight: Radius.circular(16.0),
-        ),
-      ),
-      checkboxActiveColor: Theme.of(context).colorScheme.primary,
-      checkboxBorderColor: Theme.of(context).colorScheme.outline,
-      dragHandleColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      dragHandleSize: 24.0,
-      dragHandleIcon: Icons.drag_indicator,
-      dragScaleFactor: 0.03,
-      stackItemOpacity: 0.9,
+    customTheme = ReorderableMultiDragTheme(
+      selectionBarColor: Theme.of(context).colorScheme.primaryContainer,
+      selectedItemColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+      itemColor: Theme.of(context).colorScheme.surface,
+      draggedItemBorderColor: Theme.of(context).colorScheme.primary,
+      itemBorderRadius: 12.0,
+      itemHorizontalMargin: 16.0,
+      itemVerticalMargin: 8.0,
+      maxStackOffset: 12.0,
+      maxStackRotation: 3.0,
     );
   }
 
@@ -294,7 +247,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Advanced Example'),
+        title: const Text('Task Manager'),
         elevation: 0,
       ),
       body: Padding(
@@ -322,7 +275,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                     ),
                   ),
                   Text(
-                    '${tasks.length} tasks',
+                    'Selected ${selectedTasks.length} / ${tasks.length} tasks',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -332,18 +285,14 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
             
             // Advanced usage example with custom builders and theme
             Expanded(
-              child: ReorderableMultiSelectList<TaskItem>(
+              child: ReorderableMultiDragList<TaskItem>(
                 items: tasks,
                 itemBuilder: (context, task, index, isSelected, isDragging) {
                   return _buildTaskItem(task, index);
                 },
-                onReorder: (oldIndex, newIndex) {
+                onReorder: (reorderedItems) {
                   setState(() {
-                    if (oldIndex < newIndex) {
-                      newIndex -= 1;
-                    }
-                    final task = tasks.removeAt(oldIndex);
-                    tasks.insert(newIndex, task);
+                    tasks = reorderedItems;
                   });
                 },
                 onSelectionChanged: (selected) {
@@ -371,26 +320,32 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                   );
                 },
                 initialSelection: selectedTasks,
-                showDoneButton: true,
+                showDoneButton: false,
                 doneButtonText: 'Mark as Completed',
-                showSelectionCount: true,
+                showSelectionCount: false,
                 selectionCountText: '{} tasks selected',
                 itemHeight: 100.0,
                 showDividers: true,
                 theme: customTheme,
-                animationConfig: animationConfig,
-                stackConfig: stackConfig,
-                headerBuilder: _buildCustomHeader,
-                footerBuilder: _buildCustomFooter,
-                dragHandleBuilder: _buildCustomDragHandle,
-                checkboxBuilder: _buildCustomCheckbox,
-                selectionCountBuilder: _buildCustomSelectionCount,
-                doneButtonBuilder: _buildCustomDoneButton,
-                emptyPlaceholderBuilder: _buildEmptyPlaceholder,
-                showDragHandle: true,
-                enableLongPressSelection: true,
-                enableReordering: true,
-                enableSelection: true,
+                dragAnimationDuration: const Duration(milliseconds: 200),
+                reorderAnimationDuration: const Duration(milliseconds: 300),
+                headerWidget: _buildCustomHeader(context, selectedTasks, selectedTasks.isNotEmpty),
+                footerWidget: selectedTasks.isNotEmpty 
+                    ? _buildCustomFooter(
+                        context, 
+                        selectedTasks, 
+                        true, 
+                        () => _markTasksAsCompleted(selectedTasks)
+                      )
+                    : null,
+                dragHandleBuilder: (context, isSelected) => _buildCustomDragHandle(
+                  context, 
+                  isSelected, 
+                  false
+                ),
+                selectionBarBuilder: (context, selectedCount, onDone) {
+                  return SizedBox();
+                },
               ),
             ),
           ],
@@ -409,66 +364,69 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
       margin: EdgeInsets.zero,
       elevation: 0,
       color: Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _getPriorityIcon(task.priority),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                    color: task.isCompleted 
-                        ? Theme.of(context).colorScheme.outline 
-                        : Theme.of(context).colorScheme.onSurface,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _getPriorityIcon(task.priority),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    task.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                      color: task.isCompleted 
+                          ? Theme.of(context).colorScheme.outline 
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                _formatDate(task.dueDate),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _isOverdue(task.dueDate) && !task.isCompleted
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                Text(
+                  _formatDate(task.dueDate),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _isOverdue(task.dueDate) && !task.isCompleted
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(left: 32.0),
-            child: Text(
-              task.description,
-              style: TextStyle(
-                fontSize: 14,
-                color: task.isCompleted 
-                    ? Theme.of(context).colorScheme.outline 
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          if (task.isCompleted)
+            const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.only(left: 32.0),
               child: Text(
-                'Completed',
+                task.description,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 14,
+                  color: task.isCompleted 
+                      ? Theme.of(context).colorScheme.outline 
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-        ],
+            const SizedBox(height: 4),
+            if (task.isCompleted)
+              Padding(
+                padding: const EdgeInsets.only(left: 32.0),
+                child: Text(
+                  'Completed',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -563,21 +521,6 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
         size: 24,
-      ),
-    );
-  }
-
-  Widget _buildCustomCheckbox(
-    BuildContext context,
-    bool isSelected,
-    ValueChanged<bool?> onChanged,
-  ) {
-    return Checkbox(
-      value: isSelected,
-      onChanged: onChanged,
-      activeColor: Theme.of(context).colorScheme.primary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4.0),
       ),
     );
   }
@@ -719,6 +662,25 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
         ),
       );
     });
+  }
+
+  void _markTasksAsCompleted(List<TaskItem> tasksToComplete) {
+    setState(() {
+      for (final task in tasksToComplete) {
+        final index = tasks.indexWhere((t) => t.id == task.id);
+        if (index != -1) {
+          tasks[index] = tasks[index].copyWith(isCompleted: true);
+        }
+      }
+      selectedTasks = [];
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Marked ${tasksToComplete.length} tasks as completed'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 }
 
