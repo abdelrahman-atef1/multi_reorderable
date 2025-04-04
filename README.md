@@ -30,10 +30,11 @@ A powerful and customizable Flutter widget for multi-selection and animated reor
 ## Examples
 
 ### Simple Usage
-![Simple Example](https://imgur.com/a/NwxcbVg)
+![Simple Example](https://i.ibb.co/6cLfNdQj/2025-04-04-04-37-01.gif)
 
 ### Advanced Usage
-![Advanced Example](https://imgur.com/a/FD2WELG)
+![Advanced Example](https://i.ibb.co/7fyyxN7/2025-04-04-04-39-17.gif)
+
 
 ## Installation
 
