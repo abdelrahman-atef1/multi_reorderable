@@ -11,63 +11,67 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/to/develop-packages).
 -->
 
-# Reorderable Multi-Select List
+# Multi Reorderable
 
-A highly customizable Flutter widget for multi-selection and animated reordering of items.
+A powerful and customizable Flutter widget for multi-selection and animated reordering of items.
+
+[![Upwork Profile](https://img.shields.io/badge/Upwork-Abdelrahman%20Atef-6FDA44?style=for-the-badge&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/abdelrahmanatef4)
 
 ## Features
 
 - **Multi-selection**: Select multiple items with checkboxes
-- **Reordering**: Drag and drop items to reorder them
-- **Animated stacking**: Selected items are stacked with a slight offset when dragging
-- **Highly customizable**: Extensive theming and builder support
-- **Modular architecture**: Well-structured code with separation of concerns
+- **Drag & Drop Reordering**: Easily reorder items with smooth animations
+- **Animated Stacking**: Selected items stack visually when being dragged
+- **Customizable UI**: Extensive theming options and builder patterns
+- **Selection Management**: Built-in selection state management with callbacks
+- **Auto-scrolling**: Automatically scrolls when dragging near edges
+- **Header & Footer Support**: Add custom widgets above and below the list
 
-![Demo Animation](https://via.placeholder.com/350x200.png?text=Reorderable+Multi+Select+Demo)
+![Demo Animation](https://via.placeholder.com/350x200.png?text=Multi+Reorderable+Demo)
 
-## Getting Started
+## Installation
 
 Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  reorderable_multi_select: ^1.0.0
+  multi_reorderable: ^0.0.1
 ```
 
 Then import it in your Dart code:
 
 ```dart
-import 'package:multi_reorderable/reorderable_multi_select.dart';
+import 'package:multi_reorderable/multi_reorderable.dart';
 ```
 
 ## Basic Usage
 
 ```dart
-ReorderableMultiSelectList<String>(
-  items: ['Item 1', 'Item 2', 'Item 3'],
+ReorderableMultiDragList<String>(
+  items: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'],
   itemBuilder: (context, item, index, isSelected, isDragging) {
-    return ListTile(
-      title: Text(item),
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.all(8),
+      child: Text(
+        item,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isDragging ? Colors.grey : Colors.black,
+        ),
+      ),
     );
   },
-  onReorder: (oldIndex, newIndex) {
-    // Handle reordering
+  onReorder: (reorderedItems) {
     setState(() {
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final item = items.removeAt(oldIndex);
-      items.insert(newIndex, item);
+      items = reorderedItems;
     });
   },
   onSelectionChanged: (selectedItems) {
-    // Handle selection changes
-    setState(() {
-      this.selectedItems = selectedItems;
-    });
+    print('Selected items: $selectedItems');
   },
   onDone: (selectedItems) {
-    // Handle done button press
+    print('Done with selection: $selectedItems');
   },
 )
 ```
@@ -76,89 +80,92 @@ ReorderableMultiSelectList<String>(
 
 ### Theming
 
-The widget can be styled using the `ReorderableMultiSelectTheme` class:
+Customize the appearance using the `ReorderableMultiDragTheme`:
 
 ```dart
-ReorderableMultiSelectList<String>(
+ReorderableMultiDragList<String>(
   // ... other properties
-  theme: ReorderableMultiSelectTheme(
-    primaryColor: Colors.blue,
-    itemBackgroundColor: Colors.white,
-    selectedItemBackgroundColor: Colors.blue.withOpacity(0.1),
-    dividerColor: Colors.grey,
-    itemTextStyle: TextStyle(fontSize: 16),
-    cardElevation: 2.0,
-    itemBorderRadius: BorderRadius.circular(8.0),
-    // ... many more styling options
+  theme: ReorderableMultiDragTheme(
+    itemColor: Colors.white,
+    selectedItemColor: Colors.blue.shade50,
+    selectionBarColor: Colors.blue.shade100,
+    draggedItemBorderColor: Colors.blue,
+    itemBorderRadius: 8.0,
+    itemHorizontalMargin: 8.0,
+    itemVerticalMargin: 4.0,
+    maxStackOffset: 6.0,
+    maxStackRotation: 3.0,
   ),
 )
-```
-
-You can also create a theme from the app's theme:
-
-```dart
-final customTheme = ReorderableMultiSelectTheme.fromTheme(Theme.of(context));
 ```
 
 ### Custom Builders
 
-Customize every aspect of the widget using builder functions:
+Use builder functions for advanced customization:
 
 ```dart
-ReorderableMultiSelectList<TaskItem>(
+ReorderableMultiDragList<String>(
   // ... other properties
-  headerBuilder: (context, selectedItems, isSelectionMode) {
-    // Build custom header
+  selectionBarBuilder: (context, selectedCount, onDone) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.blueGrey.shade100,
+      child: Row(
+        children: [
+          Text('$selectedCount items selected'),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: onDone,
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
   },
-  footerBuilder: (context, selectedItems, isSelectionMode, onDone) {
-    // Build custom footer
+  dragHandleBuilder: (context, isSelected) {
+    return Icon(
+      Icons.drag_indicator,
+      color: isSelected ? Colors.blue : Colors.grey,
+    );
   },
-  dragHandleBuilder: (context, isSelected, isDragging) {
-    // Build custom drag handle
-  },
-  checkboxBuilder: (context, isSelected, onChanged) {
-    // Build custom checkbox
-  },
-  // ... other builders
 )
 ```
 
-### Animation Configuration
-
-Customize animations using the `ReorderableAnimationConfig` class:
+### Additional Options
 
 ```dart
-ReorderableMultiSelectList<String>(
+ReorderableMultiDragList<String>(
   // ... other properties
-  animationConfig: ReorderableAnimationConfig(
-    collectAnimationDuration: Duration(milliseconds: 300),
-    reorderAnimationDuration: Duration(milliseconds: 200),
-    dragAnimationDuration: Duration(milliseconds: 150),
-    collectAnimationCurve: Curves.easeInOut,
-    // ... other animation properties
+  showDoneButton: true,
+  doneButtonText: 'Apply',
+  showSelectionCount: true,
+  selectionCountText: '{} selected',
+  itemHeight: 70.0,
+  showDividers: true,
+  dragAnimationDuration: const Duration(milliseconds: 200),
+  reorderAnimationDuration: const Duration(milliseconds: 300),
+  autoScrollSpeed: 15.0,
+  autoScrollThreshold: 100.0,
+  headerWidget: Container(
+    padding: const EdgeInsets.all(16),
+    child: const Text('My Items', style: TextStyle(fontWeight: FontWeight.bold)),
+  ),
+  footerWidget: Container(
+    padding: const EdgeInsets.all(16),
+    child: const Text('Swipe to see more'),
   ),
 )
 ```
 
-### Stack Configuration
+## Example
 
-Customize the stacking behavior when dragging selected items:
+Check out the `/example` folder for a complete implementation.
 
-```dart
-ReorderableMultiSelectList<String>(
-  // ... other properties
-  stackConfig: ReorderableStackConfig(
-    stackOffset: Offset(4, 4),
-    maxStackOffset: 8.0,
-    maxStackRotation: 2.0,
-    maxStackItems: 3,
-  ),
-)
-```
+## About the Developer
 
-## Advanced Example
+This package is developed and maintained by [Abdelrahman Atef](https://www.upwork.com/freelancers/abdelrahmanatef4), a Flutter developer specializing in creating custom, high-quality UI components and applications.
 
-See the `/example` folder for a complete example with advanced customization.
+Feel free to reach out for custom development or modifications to this package.
 
 ## License
 
