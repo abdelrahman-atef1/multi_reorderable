@@ -1,6 +1,6 @@
 name: multi_reorderable
 description: "A Flutter package for multi-selection and animated reordering of items."
-version: 0.0.3
+version: 0.0.4
 homepage:
 repository: "https://github.com/abdelrahman-atef1/multi_reorderable"
 
