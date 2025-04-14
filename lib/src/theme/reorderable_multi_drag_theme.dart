@@ -32,6 +32,12 @@ class ReorderableMultiDragTheme {
   /// Maximum rotation for cards in the stack
   final double maxStackRotation;
 
+  /// Color for the drop target highlight
+  final Color dropTargetColor;
+
+  /// Height of the drop target highlight
+  final double dropTargetHeight;
+
   /// Text style for the selection count
   final TextStyle? selectionCountTextStyle;
 
@@ -49,6 +55,8 @@ class ReorderableMultiDragTheme {
     this.itemVerticalMargin = 4.0,
     this.maxStackOffset = 8.0,
     this.maxStackRotation = 2.0,
+    this.dropTargetColor = const Color(0x4D0000FF),
+    this.dropTargetHeight = 4.0,
     this.selectionCountTextStyle,
     this.doneButtonTextStyle,
   });
@@ -64,6 +72,8 @@ class ReorderableMultiDragTheme {
     double? itemVerticalMargin,
     double? maxStackOffset,
     double? maxStackRotation,
+    Color? dropTargetColor,
+    double? dropTargetHeight,
     TextStyle? selectionCountTextStyle,
     TextStyle? doneButtonTextStyle,
   }) {
@@ -77,6 +87,8 @@ class ReorderableMultiDragTheme {
       itemVerticalMargin: itemVerticalMargin ?? this.itemVerticalMargin,
       maxStackOffset: maxStackOffset ?? this.maxStackOffset,
       maxStackRotation: maxStackRotation ?? this.maxStackRotation,
+      dropTargetColor: dropTargetColor ?? this.dropTargetColor,
+      dropTargetHeight: dropTargetHeight ?? this.dropTargetHeight,
       selectionCountTextStyle: selectionCountTextStyle ?? this.selectionCountTextStyle,
       doneButtonTextStyle: doneButtonTextStyle ?? this.doneButtonTextStyle,
     );
@@ -95,6 +107,8 @@ class ReorderableMultiDragTheme {
       itemVerticalMargin: other.itemVerticalMargin,
       maxStackOffset: other.maxStackOffset,
       maxStackRotation: other.maxStackRotation,
+      dropTargetColor: other.dropTargetColor,
+      dropTargetHeight: other.dropTargetHeight,
       selectionCountTextStyle: other.selectionCountTextStyle,
       doneButtonTextStyle: other.doneButtonTextStyle,
     );

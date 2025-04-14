@@ -390,6 +390,22 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
     }
   }
 
+  /// Build a drop target highlight widget
+  Widget _buildDropTargetHighlight(int index) {
+    if (!_isDragging || _targetPositions.isEmpty) return const SizedBox();
+    
+    final targetIndex = _targetPositions.values.first;
+    if (index != targetIndex) return const SizedBox();
+    
+    return Container(
+      height: widget.theme.dropTargetHeight,
+      color: widget.theme.dropTargetColor,
+      margin: EdgeInsets.symmetric(
+        horizontal: widget.theme.itemHorizontalMargin,
+      ),
+    );
+  }
+
   /// Calculate the position of an item during reordering animation
   Offset _calculateItemPosition(int index, double animationValue) {
     final item = widget.items[index];
@@ -532,7 +548,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
                   borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -567,7 +583,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -725,7 +741,12 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
                         
                         return Transform.translate(
                           offset: offset,
-                          child: child,
+                          child: Column(
+                            children: [
+                              _buildDropTargetHighlight(index),
+                              child ?? const SizedBox(),
+                            ],
+                          ),
                         );
                       },
                       child: Container(
@@ -739,7 +760,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
                           borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 2,
                               offset: const Offset(0, 1),
                             ),
