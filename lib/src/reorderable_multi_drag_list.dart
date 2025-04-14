@@ -548,7 +548,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
                   borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -583,7 +583,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -760,7 +760,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
                           borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 2,
                               offset: const Offset(0, 1),
                             ),

@@ -232,7 +232,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     // Create custom theme based on app theme
     customTheme = ReorderableMultiDragTheme(
       selectionBarColor: Theme.of(context).colorScheme.primaryContainer,
-      selectedItemColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+      selectedItemColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
       itemColor: Theme.of(context).colorScheme.surface,
       draggedItemBorderColor: Theme.of(context).colorScheme.primary,
       itemBorderRadius: 12.0,
@@ -519,7 +519,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
         Icons.drag_indicator,
         color: isDragging
             ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
         size: 24,
       ),
     );
@@ -571,7 +571,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
           Icon(
             Icons.task,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -617,7 +617,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     return Container(
       padding: const EdgeInsets.all(4.0),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4.0),
       ),
       child: Icon(
