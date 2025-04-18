@@ -47,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const ExampleScreen(),
     const AdvancedExampleScreen(),
+    const PaginationExampleScreen(),
   ];
   
   @override
@@ -68,6 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list_alt),
             label: 'Advanced Example',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.data_array),
+            label: 'Pagination',
           ),
         ],
       ),
@@ -735,4 +740,206 @@ enum TaskPriority {
   low,
   medium,
   high,
+}
+
+// Pagination Example Screen
+class PaginationExampleScreen extends StatefulWidget {
+  const PaginationExampleScreen({Key? key}) : super(key: key);
+
+  @override
+  State<PaginationExampleScreen> createState() => _PaginationExampleScreenState();
+}
+
+class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
+  // Sample data with pagination
+  List<ItemData> items = [];
+  
+  // Create a global key to access the list state
+  final listKey = GlobalKey<ReorderableMultiDragListState<ItemData>>();
+  
+  // Pagination settings
+  final int pageSize = 15;
+  int totalItems = 200; // simulate a large dataset
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load initial data
+    _loadInitialData();
+  }
+
+  // Simulates loading initial data
+  Future<void> _loadInitialData() async {
+    setState(() {
+      isLoading = true;
+    });
+    
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    
+    setState(() {
+      // Generate initial items
+      items = List.generate(
+        pageSize,
+        (index) => ItemData(
+          id: 'item_$index',
+          title: 'Item ${index + 1}',
+          subtitle: 'Description for item ${index + 1}',
+          color: Colors.primaries[index % Colors.primaries.length],
+        ),
+      );
+      isLoading = false;
+    });
+  }
+
+  // Load more data when scrolling
+  Future<void> _loadMoreData(int page, int pageSize) async {
+    // Skip if we've loaded all items
+    if (items.length >= totalItems) return;
+    
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    setState(() {
+      // Calculate the start index for the next page
+      final startIndex = items.length;
+      // Determine how many more items to add (handle reaching the end)
+      final itemsToAdd = (startIndex + pageSize > totalItems) 
+          ? totalItems - startIndex 
+          : pageSize;
+      
+      // Add new items
+      items.addAll(
+        List.generate(
+          itemsToAdd,
+          (index) {
+            final actualIndex = startIndex + index;
+            return ItemData(
+              id: 'item_$actualIndex',
+              title: 'Item ${actualIndex + 1}',
+              subtitle: 'Description for item ${actualIndex + 1}',
+              color: Colors.primaries[actualIndex % Colors.primaries.length],
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  // Refresh all data
+  Future<void> _refreshData() async {
+    setState(() {
+      isLoading = true;
+    });
+    
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    
+    setState(() {
+      // Generate fresh items
+      items = List.generate(
+        pageSize,
+        (index) => ItemData(
+          id: 'item_$index',
+          title: 'Item ${index + 1} (Refreshed)',
+          subtitle: 'Updated description for item ${index + 1}',
+          color: Colors.primaries[index % Colors.primaries.length],
+        ),
+      );
+      isLoading = false;
+    });
+    
+    // Refresh the list widget
+    listKey.currentState?.refreshItems(resetPagination: true);
+    
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Data refreshed successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pagination Example'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshData,
+            tooltip: 'Refresh data',
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Showing ${items.length} of $totalItems items',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Expanded(
+                  child: ReorderableMultiDragList<ItemData>(
+                    listKey: listKey,
+                    items: items,
+                    pageSize: pageSize,
+                    onPageRequest: _loadMoreData,
+                    itemBuilder: (context, item, index, isSelected, isDragging) {
+                      return ListTile(
+                        title: Text(item.title),
+                        subtitle: Text(item.subtitle),
+                        leading: CircleAvatar(
+                          backgroundColor: item.color,
+                          child: Text('${index + 1}'),
+                        ),
+                      );
+                    },
+                    onReorder: (reorderedItems) {
+                      setState(() {
+                        items = reorderedItems;
+                      });
+                    },
+                    headerWidget: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      child: const Text(
+                        'Scroll down to load more items',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    footerWidget: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'End of list - ${items.length} items loaded',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    theme: ReorderableMultiDragTheme(
+                      selectionBarColor: Theme.of(context).colorScheme.surface,
+                      selectedItemColor: Theme.of(context).colorScheme.primaryContainer,
+                      itemColor: Theme.of(context).colorScheme.surface,
+                      draggedItemBorderColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _refreshData,
+        tooltip: 'Refresh',
+        child: const Icon(Icons.refresh),
+      ),
+    );
+  }
 }

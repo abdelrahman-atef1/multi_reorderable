@@ -15,7 +15,9 @@ and the Flutter guide for
 
 A powerful and customizable Flutter widget for multi-selection and animated reordering of items.
 
-[![Upwork Profile](https://img.shields.io/badge/Upwork-Abdelrahman%20Atef-6FDA44?style=for-the-badge&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/abdelrahmanatef4)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Abdelrahman%20Atef-0077B5?style=for-the-badge&logo=googlechrome&logoColor=white)](https://abdelrahman.codesters-inc.com/)
+
+[![Work with me](https://img.shields.io/badge/Work%20with%20me-Hire%20on%20Upwork-6FDA44?style=for-the-badge&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/abdelrahmanatef4)
 
 ## Features
 
@@ -26,6 +28,8 @@ A powerful and customizable Flutter widget for multi-selection and animated reor
 - **Selection Management**: Built-in selection state management with callbacks
 - **Auto-scrolling**: Automatically scrolls when dragging near edges
 - **Header & Footer Support**: Add custom widgets above and below the list
+- **Pagination Support**: Load more items as the user scrolls
+- **Programmable Refresh**: Refresh the list from outside using a GlobalKey
 
 ## Examples
 
@@ -164,13 +168,57 @@ ReorderableMultiDragList<String>(
 )
 ```
 
+### Pagination
+
+Enable pagination to load more items as the user scrolls:
+
+```dart
+// Create a global key to access the widget's state
+final listKey = GlobalKey<ReorderableMultiDragListState<MyItem>>();
+
+// In your build method
+ReorderableMultiDragList<MyItem>(
+  listKey: listKey,
+  items: myItems,
+  pageSize: 20, // Number of items per page
+  onPageRequest: (page, pageSize) async {
+    // Load more items when user scrolls
+    final newItems = await fetchMoreItems(page, pageSize);
+    setState(() {
+      myItems.addAll(newItems);
+    });
+  },
+  // ... other properties
+)
+```
+
+### Programmatic Refresh
+
+Refresh the list from outside using the GlobalKey:
+
+```dart
+// Refresh the list programmatically
+void refreshList() {
+  // Reset pagination (optional)
+  listKey.currentState?.refreshItems(resetPagination: true);
+}
+
+// Use in a button or other event
+FloatingActionButton(
+  onPressed: refreshList,
+  child: Icon(Icons.refresh),
+)
+```
+
 ## Example
 
 Check out the `/example` folder for a complete implementation.
 
 ## About the Developer
 
-This package is developed and maintained by [Abdelrahman Atef](https://www.upwork.com/freelancers/abdelrahmanatef4), a Flutter developer specializing in creating custom, high-quality UI components and applications.
+This package is developed and maintained by [Abdelrahman Atef](https://abdelrahman.codesters-inc.com/), a Flutter developer specializing in creating custom, high-quality UI components and applications.
+
+[![Work with me](https://img.shields.io/badge/Work%20with%20me-Hire%20on%20Upwork-6FDA44?style=for-the-badge&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/abdelrahmanatef4)
 
 Feel free to reach out for custom development or modifications to this package.
 

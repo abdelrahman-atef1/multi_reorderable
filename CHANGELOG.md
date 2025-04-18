@@ -15,3 +15,11 @@
 
 * Revert withValues back to withOpacity
 * Update version to 0.0.4
+
+## 0.0.5
+
+* Added pagination support for loading more items as user scrolls
+* Added ability to refresh the widget programmatically from outside using a GlobalKey
+* Exposed ReorderableMultiDragListState class to enable external refresh access
+* Added new example demonstrating pagination and refresh functionality
+* Improved error handling for data loading
