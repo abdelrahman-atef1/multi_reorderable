@@ -77,12 +77,18 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   /// Optional builder for the drag handle
   final Widget Function(BuildContext context, bool isSelected)? dragHandleBuilder;
 
+  /// Add pagination parameters
+  final int? pageSize;
+  final Future<void> Function(int page, int pageSize)? onPageRequest;
+
   /// Creates a ReorderableMultiDragList widget
-  const ReorderableMultiDragList({
+  ReorderableMultiDragList({
     super.key,
     required this.items,
     required this.itemBuilder,
     required this.onReorder,
+    this.onPageRequest,
+    this.pageSize = 20,
     this.onSelectionChanged,
     this.onDone,
     this.initialSelection,
@@ -101,7 +107,8 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     this.footerWidget,
     this.selectionBarBuilder,
     this.dragHandleBuilder,
-  }) : theme = theme ?? const ReorderableMultiDragTheme();
+  }) : theme = theme ?? const ReorderableMultiDragTheme(),
+      super();
 
   @override
   State<ReorderableMultiDragList<T>> createState() => _ReorderableMultiDragListState<T>();
@@ -152,6 +159,10 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
   // Auto-scroll timer
   Timer? _autoScrollTimer;
 
+  // Pagination state variables
+  bool _isLoading = false;
+  int _currentPage = 0;
+
   @override
   void initState() {
     super.initState();
@@ -182,6 +193,7 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
     // Add listeners
     _dragAnimationController.addStatusListener(_onDragAnimationStatusChanged);
     _reorderAnimationController.addStatusListener(_onReorderAnimationStatusChanged);
+    _scrollController.addListener(_onScroll);
   }
 
   void _initItemKeys() {
@@ -701,6 +713,24 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
     }
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent && !_isLoading) {
+      _loadMoreData();
+    }
+  }
+
+  Future<void> _loadMoreData() async {
+    if (widget.onPageRequest == null) return;
+    setState(() {
+      _isLoading = true;
+    });
+    await widget.onPageRequest!(_currentPage + 1, widget.pageSize ?? 20);
+    setState(() {
+      _isLoading = false;
+      _currentPage++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -850,6 +880,8 @@ class _ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T
             
             // Footer widget if provided
             if (widget.footerWidget != null) widget.footerWidget!,
+
+            if (_isLoading) const CircularProgressIndicator(),
           ],
         ),
         
