@@ -1,4 +1,23 @@
-# 0.1.1
+
+# [0.1.2] - 2023-05-19
+
+### Added
+* Pull-to-refresh functionality with `RefreshIndicator`
+* Support for customizing refresh indicator appearance
+* Example implementation for pull-to-refresh in the example app
+
+### Changed
+* Improved pagination implementation to be resilient to widget rebuilds
+* Page numbers are now calculated dynamically based on items count
+* Better error handling and debug information for pagination
+* Updated documentation and examples
+
+### Fixed
+* Fixed pagination issues when widgets are rebuilt
+* Fixed issue with page number always being 1 in pagination requests
+* Improved widget state retention during rebuilds
+
+## 0.1.1
 
 * Updated ExampleScreen, AdvancedExampleScreen, and PaginationExampleScreen constructors to use the shorthand `super.key` syntax.
 * Removed unused import statements from drag_styles_manager.dart to clean up the codebase.

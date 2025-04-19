@@ -19,6 +19,7 @@ import 'utils/drag_list_utils.dart';
 /// 6. Can use any widget as a child
 /// 7. Supports pagination for loading more items
 /// 8. Can be refreshed programmatically from outside
+/// 9. Supports pull-to-refresh with RefreshIndicator
 class ReorderableMultiDragList<T> extends StatefulWidget {
   /// List of items to display
   final List<T> items;
@@ -136,11 +137,101 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   final int? pageSize;
   
   /// Callback for requesting more items when pagination occurs
+  /// 
+  /// This callback is called when the user scrolls near the end of the list
+  /// and more items need to be loaded. The callback provides the next page number
+  /// and the page size.
+  /// 
+  /// The page number is calculated dynamically based on the current number of items
+  /// in the list and the page size, using the formula:
+  /// `nextPage = (currentItemsCount / pageSize).floor() + 1`
+  /// 
+  /// This ensures that even if the widget is rebuilt, the correct page number
+  /// will be requested based on the actual data.
+  /// 
+  /// IMPORTANT: When implementing this callback, make sure to:
+  /// 1. Use the provided page number in your API request (starts at 1, not 0)
+  /// 2. Append new items to your existing list, not replace them
+  /// 3. Update your state after receiving the response
+  /// 
+  /// Example implementation:
+  /// ```dart
+  /// onPageRequest: (page, pageSize) async {
+  ///   // IMPORTANT: Use the exact page number provided by the callback
+  ///   print('Loading page $page');
+  ///   
+  ///   // Update your request object with the provided page number
+  ///   final request = YourRequestObject()..page = page;
+  ///   
+  ///   // Call your API with the updated request
+  ///   final response = await yourApi.fetchItems(request);
+  ///   
+  ///   // Add new items to your existing list (not replace)
+  ///   setState(() {
+  ///     yourItems.addAll(response.items);
+  ///   });
+  /// }
+  /// ```
+  /// 
+  /// Common issues:
+  /// - If you're always receiving page 1 data, make sure your API request
+  ///   is using the page number provided by this callback, not a hardcoded value.
+  /// - Ensure your API page numbers start at 1 (not 0) to match this widget's expectations.
+  /// - Make sure your items list is properly preserved between widget rebuilds.
   final Future<void> Function(int page, int pageSize)? onPageRequest;
   
   /// Optional global key to access the state from outside
   final GlobalKey<ReorderableMultiDragListState<T>>? listKey;
 
+  /// Whether to enable the pull-to-refresh functionality
+  /// 
+  /// When set to true, a RefreshIndicator will be added to the list,
+  /// allowing users to pull down to refresh the list.
+  /// 
+  /// The refresh action will reset pagination and reload the first page.
+  /// To handle the refresh action, provide an [onRefresh] callback.
+  final bool enablePullToRefresh;
+  
+  /// Callback for when the user pulls to refresh
+  /// 
+  /// This callback is called when the user pulls down to refresh the list.
+  /// If not provided, [onPageRequest] will be used with page=1.
+  /// 
+  /// Example:
+  /// ```dart
+  /// onRefresh: () async {
+  ///   // Clear your existing items
+  ///   setState(() {
+  ///     yourItems.clear();
+  ///   });
+  ///   
+  ///   // Fetch the first page
+  ///   final response = await yourApi.fetchItems(page: 1);
+  ///   
+  ///   // Update your state with the new items
+  ///   setState(() {
+  ///     yourItems.addAll(response.items);
+  ///   });
+  /// }
+  /// ```
+  final Future<void> Function()? onRefresh;
+  
+  /// Color for the refresh indicator
+  /// 
+  /// If not provided, the theme's primary color will be used.
+  final Color? refreshIndicatorColor;
+  
+  /// Background color for the refresh indicator
+  /// 
+  /// If not provided, the theme's background color will be used.
+  final Color? refreshIndicatorBackgroundColor;
+  
+  /// Displacement for the refresh indicator
+  /// 
+  /// The amount of pixels the refresh indicator should be displaced from the top.
+  /// Default is 40.0 pixels.
+  final double refreshIndicatorDisplacement;
+  
   /// Creates a ReorderableMultiDragList widget
   ReorderableMultiDragList({
     super.key,
@@ -170,6 +261,11 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     this.loadingWidgetBuilder,
     this.noMoreItemsBuilder,
     this.listKey,
+    this.enablePullToRefresh = false,
+    this.onRefresh,
+    this.refreshIndicatorColor,
+    this.refreshIndicatorBackgroundColor,
+    this.refreshIndicatorDisplacement = 40.0,
   }) : theme = theme ?? ReorderableMultiDragTheme();
 
   @override
@@ -225,14 +321,24 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
 
   // Pagination state variables
   bool _isLoading = false;
-  int _currentPage = 0;
+  // Remove current page state - we'll calculate it dynamically
+  // int _currentPage = 0;
   bool _hasMoreItems = true;
+  // Track the previous items length to detect actual new items
+  int _previousItemsLength = 0;
+  // Track if pagination is initialized
+  bool _isPaginationInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _selectedItems = Set<T>.from(widget.initialSelection ?? []);
     _isSelectionMode = _selectedItems.isNotEmpty;
+    _previousItemsLength = widget.items.length;
+    
+    // No longer need to initialize current page
+    // _currentPage = 0;
+    _isPaginationInitialized = true;
 
     // Initialize animation controllers
     _dragAnimationController = AnimationController(
@@ -260,6 +366,11 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     _reorderAnimationController.addStatusListener(_onReorderAnimationStatusChanged);
     _scrollController.addListener(_onScroll);
     
+    // Load initial data if empty
+    if (widget.items.isEmpty) {
+      _loadMoreData();
+    }
+    
     // Add global listener for pointer movements
     GestureBinding.instance.pointerRouter.addGlobalRoute(_handleGlobalPointerEvent);
   }
@@ -283,6 +394,18 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     // Update item keys if items changed
     if (oldWidget.items != widget.items || oldWidget.items.length != widget.items.length) {
       _initItemKeys();
+      
+      // Check for newly added items (for pagination detection)
+      if (widget.items.length > _previousItemsLength) {
+        // Update hasMoreItems based on actual new items being added
+        _hasMoreItems = true;
+      } else if (widget.items.length == _previousItemsLength && _isLoading) {
+        // If no new items were added during loading, we've reached the end
+        _hasMoreItems = false;
+      }
+      
+      // Update previous length tracker
+      _previousItemsLength = widget.items.length;
     }
   }
 
@@ -760,35 +883,85 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
   }
 
   void _onScroll() {
+    // Ensure we have the scroll controller and it has clients
+    if (!_scrollController.hasClients) return;
+    
+    // Don't trigger pagination if already loading or no more items
     if (!_hasMoreItems || _isLoading) return;
     
-    if (_scrollController.position.pixels >= 
-        _scrollController.position.maxScrollExtent * 0.8) {
+    // Get scroll metrics
+    final scrollPosition = _scrollController.position;
+    final maxScroll = scrollPosition.maxScrollExtent;
+    final currentScroll = scrollPosition.pixels;
+    final viewportDimension = scrollPosition.viewportDimension;
+    
+    // Calculate the threshold (80% of the way down)
+    final threshold = maxScroll - (viewportDimension * 0.2);
+    
+    // Load more when scrolling past the threshold
+    if (currentScroll >= threshold) {
       _loadMoreData();
     }
   }
 
   /// Method to load more data for pagination
   Future<void> _loadMoreData() async {
-    if (widget.onPageRequest == null || _isLoading || !_hasMoreItems) return;
+    // Check all pre-conditions to load more data
+    if (widget.onPageRequest == null || 
+        _isLoading || 
+        !_hasMoreItems) {
+      return;
+    }
     
-    setState(() {
-      _isLoading = true;
-    });
+    // Set loading state
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+    
+    // Store the initial items length to detect if new items were added
+    final initialItemsLength = widget.items.length;
     
     try {
-      await widget.onPageRequest!(_currentPage + 1, widget.pageSize ?? 20);
-      setState(() {
-        _currentPage++;
-        // If no new items were added, we've reached the end
-        if (widget.items.length <= _currentPage * (widget.pageSize ?? 20)) {
-          _hasMoreItems = false;
-        }
-      });
+      // Calculate the next page based on item count and page size
+      // (pages start at 1, so we add 1 to the calculated value)
+      final pageSize = widget.pageSize ?? 20;
+      final nextPage = (initialItemsLength / pageSize).floor() + 1;
+      
+      // Debug printing to help troubleshoot
+      debugPrint('Calculated and requesting page: $nextPage (items: $initialItemsLength, pageSize: $pageSize)');
+      
+      // Request new page of data
+      await widget.onPageRequest!(nextPage, pageSize);
+      
+      // Only update state if widget is still mounted
+      if (mounted) {
+        setState(() {
+          // Check if new items were actually added
+          final newItemsAdded = widget.items.length > initialItemsLength;
+          final itemsAdded = widget.items.length - initialItemsLength;
+          
+          // Debug printing to help troubleshoot
+          debugPrint('Items before: $initialItemsLength, after: ${widget.items.length}, added: $itemsAdded');
+          
+          // If no new items were added, or we received fewer items than the page size,
+          // we've likely reached the end
+          if (!newItemsAdded || 
+              (widget.items.length - initialItemsLength) < pageSize) {
+            _hasMoreItems = false;
+            debugPrint('No more items to load. hasMoreItems set to false');
+          }
+          
+          // Update previous length tracker
+          _previousItemsLength = widget.items.length;
+        });
+      }
     } catch (e) {
       // Handle errors if needed
       debugPrint('Error loading more data: $e');
     } finally {
+      // Reset loading state if widget is still mounted
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -800,24 +973,26 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
   /// Method to refresh the list programmatically
   /// Can be called from outside using a GlobalKey
   void refreshItems({bool resetPagination = false}) {
-    if (resetPagination) {
-      setState(() {
-        _currentPage = 0;
-        _hasMoreItems = true;
-      });
-    }
-    
-    // Cancel any active operations
+    // Cancel any active operations first
     _autoScrollTimer?.cancel();
     _dragAnimationController.stop();
     _reorderAnimationController.stop();
+    
+    if (resetPagination) {
+      setState(() {
+        // No need to reset _currentPage since we're calculating it dynamically
+        _hasMoreItems = true;
+        _isLoading = false;
+        _previousItemsLength = widget.items.length;
+        debugPrint('Pagination reset: _hasMoreItems = true');
+      });
+    }
     
     setState(() {
       _isDragging = false;
       _isReordering = false;
       _draggedItemIndex = null;
       _dragPosition = null;
-      _isLoading = false;
       
       // Re-initialize keys for any new items
       _initItemKeys();
@@ -843,8 +1018,228 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     }
   }
 
+  /// Handle refresh for pull-to-refresh functionality
+  Future<void> _handleRefresh() async {
+    // Set initial loading state
+    setState(() {
+      _isLoading = true;
+      _hasMoreItems = true;
+      // No need to reset _currentPage since we're calculating it dynamically
+    });
+    
+    try {
+      if (widget.onRefresh != null) {
+        // Use the provided refresh callback
+        await widget.onRefresh!();
+      } else if (widget.onPageRequest != null) {
+        // If no specific refresh callback is provided, use the page request callback with page 1
+        await widget.onPageRequest!(1, widget.pageSize ?? 20);
+      }
+    } catch (e) {
+      debugPrint('Error during refresh: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _previousItemsLength = widget.items.length;
+        });
+      }
+    }
+    
+    return;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Create the main list content
+    Widget listView = ListView.builder(
+      controller: _scrollController,
+      itemCount: widget.items.length + (_isLoading || !_hasMoreItems && widget.items.isNotEmpty ? 1 : 0),
+      itemBuilder: (context, index) {
+        // Show loading indicator at the end
+        if (index == widget.items.length) {
+          if (_isLoading) {
+            return Container(
+              height: 80,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              child: widget.loadingWidgetBuilder?.call(context) ?? 
+                const CircularProgressIndicator.adaptive(),
+            );
+          } else if (!_hasMoreItems && widget.items.isNotEmpty) {
+            // Show "No more items" message when we've reached the end
+            return widget.noMoreItemsBuilder?.call(context) ??
+              Container(
+                height: 60,
+                alignment: Alignment.center,
+                child: Text(
+                  "No more items to load",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              );
+          }
+        }
+        
+        // Normal item display
+        if (index < widget.items.length) {
+          final item = widget.items[index];
+          final isSelected = _selectedItems.contains(item);
+          final isDragging = _draggedItemIndex == index && _isDragging;
+          
+          // Create a key for this item
+          final key = _itemKeys[index] ?? GlobalKey();
+          _itemKeys[index] = key;
+          
+          return AnimatedBuilder(
+            animation: _reorderAnimation,
+            builder: (context, child) {
+              // Calculate the position offset during reordering
+              final offset = _calculateItemPosition(index, _reorderAnimation.value);
+              
+              return Transform.translate(
+                offset: offset,
+                child: Column(
+                  children: [
+                    _buildDropTargetHighlight(index),
+                    child ?? const SizedBox(),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              key: key,
+              margin: EdgeInsets.symmetric(
+                horizontal: widget.theme.itemHorizontalMargin,
+                vertical: widget.theme.itemVerticalMargin,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected ? widget.theme.selectedItemColor : widget.theme.itemColor,
+                borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Drag handle - only show in selection mode
+                  if (_isSelectionMode) 
+                    MouseRegion(
+                      cursor: SystemMouseCursors.grab,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onVerticalDragStart: (details) {
+                          _onDragStarted(index, details.globalPosition);
+                        },
+                        onVerticalDragUpdate: (details) {
+                          _onDragUpdate(details.globalPosition);
+                        },
+                        onVerticalDragEnd: (details) {
+                          _onDragEnded();
+                        },
+                        onHorizontalDragStart: (details) {
+                          _onDragStarted(index, details.globalPosition);
+                        },
+                        onHorizontalDragUpdate: (details) {
+                          _onDragUpdate(details.globalPosition);
+                        },
+                        onHorizontalDragEnd: (details) {
+                          _onDragEnded();
+                        },
+                        child: Container(
+                          width: 44,
+                          height: widget.itemHeight,
+                          color: Colors.transparent,
+                          alignment: Alignment.center,
+                          child: widget.dragHandleBuilder?.call(context, isSelected) ??
+                            Icon(
+                              Icons.drag_handle,
+                              color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                              size: 24,
+                            ),
+                        ),
+                      ),
+                    ),
+                  
+                  // Checkbox for selection
+                  if (_isSelectionMode) ...[
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => _toggleSelection(item),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  
+                  // Item content
+                  Expanded(
+                    child: GestureDetector(
+                      onLongPress: () {
+                        // Get the global position for the long press
+                        final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+                        final Offset position = box.localToGlobal(Offset.zero);
+                        _onLongPress(item, position + const Offset(100, 30)); // Approximate center
+                      },
+                      onTap: _isSelectionMode ? () => _toggleSelection(item) : null,
+                      child: Opacity(
+                        opacity: isDragging ? 0.3 : 1.0,
+                        child: widget.itemBuilder(
+                          context,
+                          item,
+                          index,
+                          isSelected,
+                          isDragging,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        
+        return const SizedBox(); // Fallback
+      },
+    );
+
+    // Wrap with NotificationListener for drag handling
+    Widget listContent = NotificationListener<ScrollNotification>(
+      // Prevent scroll during drag operations
+      onNotification: (notification) {
+        // If we get a scroll end notification during dragging, 
+        // ensure positions are updated
+        if (notification is ScrollEndNotification && _isDragging && _dragPosition != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Re-capture positions and update targets
+            _captureItemPositions();
+            _updateTargetPositions(_dragPosition!);
+          });
+        }
+        
+        // Return true to cancel the notification bubbling if we're dragging
+        return _isDragging;
+      },
+      child: listView,
+    );
+    
+    // Wrap with RefreshIndicator if enabled
+    if (widget.enablePullToRefresh) {
+      listContent = RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: widget.refreshIndicatorColor,
+        backgroundColor: widget.refreshIndicatorBackgroundColor,
+        displacement: widget.refreshIndicatorDisplacement,
+        child: listContent,
+      );
+    }
+
     return GestureDetector(
       // Global listener to catch dragging events that might be missed during scrolling
       onPanEnd: (_) {
@@ -869,179 +1264,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
               
               // List of items
               Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  // Prevent scroll during drag operations
-                  onNotification: (notification) {
-                    // If we get a scroll end notification during dragging, 
-                    // ensure positions are updated
-                    if (notification is ScrollEndNotification && _isDragging && _dragPosition != null) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        // Re-capture positions and update targets
-                        _captureItemPositions();
-                        _updateTargetPositions(_dragPosition!);
-                      });
-                    }
-                    
-                    // Return true to cancel the notification bubbling if we're dragging
-                    return _isDragging;
-                  },
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: widget.items.length + (_isLoading || !_hasMoreItems ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // Show loading indicator at the end
-                      if (index == widget.items.length) {
-                        if (_isLoading) {
-                          return Container(
-                            height: 80,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            alignment: Alignment.center,
-                            child: widget.loadingWidgetBuilder?.call(context) ?? 
-                              const CircularProgressIndicator.adaptive(),
-                          );
-                        } else if (!_hasMoreItems) {
-                          // Show "No more items" message when we've reached the end
-                          return widget.noMoreItemsBuilder?.call(context) ??
-                            Container(
-                              height: 60,
-                              alignment: Alignment.center,
-                              child: Text(
-                                "No more items to load",
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            );
-                        }
-                      }
-                      
-                      // Normal item display
-                      if (index < widget.items.length) {
-                        final item = widget.items[index];
-                        final isSelected = _selectedItems.contains(item);
-                        final isDragging = _draggedItemIndex == index && _isDragging;
-                        
-                        // Create a key for this item
-                        final key = _itemKeys[index] ?? GlobalKey();
-                        _itemKeys[index] = key;
-                        
-                        return AnimatedBuilder(
-                          animation: _reorderAnimation,
-                          builder: (context, child) {
-                            // Calculate the position offset during reordering
-                            final offset = _calculateItemPosition(index, _reorderAnimation.value);
-                            
-                            return Transform.translate(
-                              offset: offset,
-                              child: Column(
-                                children: [
-                                  _buildDropTargetHighlight(index),
-                                  child ?? const SizedBox(),
-                                ],
-                              ),
-                            );
-                          },
-                          child: Container(
-                            key: key,
-                            margin: EdgeInsets.symmetric(
-                              horizontal: widget.theme.itemHorizontalMargin,
-                              vertical: widget.theme.itemVerticalMargin,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected ? widget.theme.selectedItemColor : widget.theme.itemColor,
-                              borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 2,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Drag handle - only show in selection mode
-                                if (_isSelectionMode) 
-                                  MouseRegion(
-                                    cursor: SystemMouseCursors.grab,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onVerticalDragStart: (details) {
-                                        _onDragStarted(index, details.globalPosition);
-                                      },
-                                      onVerticalDragUpdate: (details) {
-                                        _onDragUpdate(details.globalPosition);
-                                      },
-                                      onVerticalDragEnd: (details) {
-                                        _onDragEnded();
-                                      },
-                                      onHorizontalDragStart: (details) {
-                                        _onDragStarted(index, details.globalPosition);
-                                      },
-                                      onHorizontalDragUpdate: (details) {
-                                        _onDragUpdate(details.globalPosition);
-                                      },
-                                      onHorizontalDragEnd: (details) {
-                                        _onDragEnded();
-                                      },
-                                      child: Container(
-                                        width: 44,
-                                        height: widget.itemHeight,
-                                        color: Colors.transparent,
-                                        alignment: Alignment.center,
-                                        child: widget.dragHandleBuilder?.call(context, isSelected) ??
-                                          Icon(
-                                            Icons.drag_handle,
-                                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
-                                            size: 24,
-                                          ),
-                                      ),
-                                    ),
-                                  ),
-                                
-                                // Checkbox for selection
-                                if (_isSelectionMode) ...[
-                                  Checkbox(
-                                    value: isSelected,
-                                    onChanged: (_) => _toggleSelection(item),
-                                  ),
-                                  const SizedBox(width: 4),
-                                ],
-                                
-                                // Item content
-                                Expanded(
-                                  child: GestureDetector(
-                                    onLongPress: () {
-                                      // Get the global position for the long press
-                                      final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
-                                      final Offset position = box.localToGlobal(Offset.zero);
-                                      _onLongPress(item, position + const Offset(100, 30)); // Approximate center
-                                    },
-                                    onTap: _isSelectionMode ? () => _toggleSelection(item) : null,
-                                    child: Opacity(
-                                      opacity: isDragging ? 0.3 : 1.0,
-                                      child: widget.itemBuilder(
-                                        context,
-                                        item,
-                                        index,
-                                        isSelected,
-                                        isDragging,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                      
-                      return const SizedBox(); // Fallback for any other cases
-                    },
-                  ),
-                ),
+                child: listContent,
               ),
               
               // Footer widget if provided

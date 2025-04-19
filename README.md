@@ -28,7 +28,8 @@ A powerful and customizable Flutter widget for multi-selection and animated reor
 - **Selection Management**: Built-in selection state management with callbacks
 - **Auto-scrolling**: Automatically scrolls when dragging near edges
 - **Header & Footer Support**: Add custom widgets above and below the list
-- **Pagination Support**: Load more items as the user scrolls
+- **Pagination Support**: Load more items as the user scrolls, with state preservation
+- **Pull-to-Refresh**: Standard pull-to-refresh functionality for reloading data
 - **Programmable Refresh**: Refresh the list from outside using a GlobalKey
 
 ## Examples
@@ -70,7 +71,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  multi_reorderable: ^0.1.0
+  multi_reorderable: ^0.2.0
 ```
 
 Then import it in your Dart code:
@@ -194,7 +195,7 @@ ReorderableMultiDragList<String>(
 
 ### Pagination
 
-Enable pagination to load more items as the user scrolls:
+Improved pagination that calculates page numbers dynamically based on items count:
 
 ```dart
 // Create a global key to access the widget's state
@@ -206,15 +207,52 @@ ReorderableMultiDragList<MyItem>(
   items: myItems,
   pageSize: 20, // Number of items per page
   onPageRequest: (page, pageSize) async {
+    print('Loading page: $page'); // Page number is calculated from items.length
+    
+    // Update your API request with the correct page number
+    final request = YourRequestObject()..page = page;
+    
     // Load more items when user scrolls
-    final newItems = await fetchMoreItems(page, pageSize);
+    final newItems = await yourApi.fetchItems(request);
+    
     setState(() {
+      // Add new items to your list (not replace)
       myItems.addAll(newItems);
     });
   },
   // ... other properties
 )
 ```
+
+### Pull-to-Refresh
+
+Enable pull-to-refresh functionality:
+
+```dart
+ReorderableMultiDragList<MyItem>(
+  // ... other properties
+  enablePullToRefresh: true, // Enable pull-to-refresh
+  onRefresh: () async {
+    // Clear your existing items
+    setState(() {
+      myItems.clear();
+    });
+    
+    // Fetch fresh data (first page)
+    final response = await yourApi.fetchItems(page: 1);
+    
+    setState(() {
+      myItems.addAll(response.items);
+    });
+  },
+  // Customize refresh indicator (optional)
+  refreshIndicatorColor: Colors.blue,
+  refreshIndicatorBackgroundColor: Colors.white,
+  refreshIndicatorDisplacement: 40.0,
+)
+```
+
+If you don't provide an `onRefresh` callback, the widget will automatically use the `onPageRequest` callback with page 1.
 
 ### Programmatic Refresh
 
