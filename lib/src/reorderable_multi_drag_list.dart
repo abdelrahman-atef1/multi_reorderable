@@ -83,6 +83,55 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   /// Optional builder for the drag handle
   final Widget Function(BuildContext context, bool isSelected)? dragHandleBuilder;
 
+  /// Optional builder for the loading indicator
+  /// 
+  /// This builder is called when the list is loading more items during pagination.
+  /// It allows you to customize the appearance of the loading indicator that appears
+  /// at the bottom of the list when loading more items.
+  /// 
+  /// If not provided, a default CircularProgressIndicator.adaptive will be used.
+  /// 
+  /// Example:
+  /// ```dart
+  /// loadingWidgetBuilder: (context) {
+  ///   return Column(
+  ///     mainAxisSize: MainAxisSize.min,
+  ///     children: [
+  ///       const CircularProgressIndicator.adaptive(),
+  ///       const SizedBox(height: 8),
+  ///       Text('Loading more items...'),
+  ///     ],
+  ///   );
+  /// }
+  /// ```
+  final Widget Function(BuildContext context)? loadingWidgetBuilder;
+
+  /// Optional builder for the "no more items" state
+  /// 
+  /// This builder is called when the list has reached the end of pagination
+  /// and there are no more items to load.
+  /// It allows you to customize the appearance of the message that appears
+  /// at the bottom of the list when all items have been loaded.
+  /// 
+  /// If not provided, a default "No more items to load" message will be shown.
+  /// 
+  /// Example:
+  /// ```dart
+  /// noMoreItemsBuilder: (context) {
+  ///   return Container(
+  ///     padding: const EdgeInsets.all(16),
+  ///     child: const Text(
+  ///       "You've reached the end of the list",
+  ///       style: TextStyle(
+  ///         fontStyle: FontStyle.italic,
+  ///         color: Colors.grey,
+  ///       ),
+  ///     ),
+  ///   );
+  /// }
+  /// ```
+  final Widget Function(BuildContext context)? noMoreItemsBuilder;
+
   /// Pagination parameters
   final int? pageSize;
   
@@ -118,6 +167,8 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     this.footerWidget,
     this.selectionBarBuilder,
     this.dragHandleBuilder,
+    this.loadingWidgetBuilder,
+    this.noMoreItemsBuilder,
     this.listKey,
   }) : theme = theme ?? ReorderableMultiDragTheme();
 
@@ -836,15 +887,33 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
                   },
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: widget.items.length + (_isLoading ? 1 : 0),
+                    itemCount: widget.items.length + (_isLoading || !_hasMoreItems ? 1 : 0),
                     itemBuilder: (context, index) {
                       // Show loading indicator at the end
-                      if (_isLoading && index == widget.items.length) {
-                        return Container(
-                          height: 60,
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        );
+                      if (index == widget.items.length) {
+                        if (_isLoading) {
+                          return Container(
+                            height: 80,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            alignment: Alignment.center,
+                            child: widget.loadingWidgetBuilder?.call(context) ?? 
+                              const CircularProgressIndicator.adaptive(),
+                          );
+                        } else if (!_hasMoreItems) {
+                          // Show "No more items" message when we've reached the end
+                          return widget.noMoreItemsBuilder?.call(context) ??
+                            Container(
+                              height: 60,
+                              alignment: Alignment.center,
+                              child: Text(
+                                "No more items to load",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            );
+                        }
                       }
                       
                       // Normal item display

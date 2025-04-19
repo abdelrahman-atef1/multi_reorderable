@@ -928,6 +928,22 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                     items: items,
                     pageSize: pageSize,
                     onPageRequest: _loadMoreData,
+                    loadingWidgetBuilder: (context) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Loading more items...',
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                     itemBuilder: (context, item, index, isSelected, isDragging) {
                       return ListTile(
                         title: Text(item.title),
