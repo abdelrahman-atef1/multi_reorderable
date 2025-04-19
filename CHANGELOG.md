@@ -1,3 +1,8 @@
+# 0.1.1
+
+* Updated ExampleScreen, AdvancedExampleScreen, and PaginationExampleScreen constructors to use the shorthand `super.key` syntax.
+* Removed unused import statements from drag_styles_manager.dart to clean up the codebase.
+
 ## 0.1.0
 
 * Fixed index out of range error when dragging multiple items to the bottom of the list

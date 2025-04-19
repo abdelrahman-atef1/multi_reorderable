@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class ExampleScreen extends StatefulWidget {
-  const ExampleScreen({Key? key}) : super(key: key);
+  const ExampleScreen({super.key});
 
   @override
   State<ExampleScreen> createState() => _ExampleScreenState();
@@ -210,8 +210,6 @@ class _ExampleScreenState extends State<ExampleScreen> {
         return 'Animated Cards';
       case DragStyle.minimalistStyle:
         return 'Minimalist';
-      default:
-        return style.toString().split('.').last;
     }
   }
 }
@@ -242,7 +240,7 @@ class ItemData {
 
 // Advanced Example Screen
 class AdvancedExampleScreen extends StatefulWidget {
-  const AdvancedExampleScreen({Key? key}) : super(key: key);
+  const AdvancedExampleScreen({super.key});
 
   @override
   State<AdvancedExampleScreen> createState() => _AdvancedExampleScreenState();
@@ -782,7 +780,7 @@ enum TaskPriority {
 
 // Pagination Example Screen
 class PaginationExampleScreen extends StatefulWidget {
-  const PaginationExampleScreen({Key? key}) : super(key: key);
+  const PaginationExampleScreen({super.key});
 
   @override
   State<PaginationExampleScreen> createState() => _PaginationExampleScreenState();
