@@ -1,24 +1,112 @@
 import 'package:flutter/material.dart';
 
-/// Theme class for the ReorderableMultiDragList widget.
-///
-/// This class provides styling options for the ReorderableMultiDragList widget.
-/// It allows for customization of colors, dimensions, and other visual properties.
+import '../styles/animated_card_style.dart';
+import '../styles/minimalist_style.dart';
+import '../styles/stacked_style.dart';
+
+/// Enum to define the drag style
+enum DragStyle {
+  /// Stack style
+  stackedStyle,
+
+  /// Animated card style
+  animatedCardStyle,
+  
+  /// Minimalist style
+  minimalistStyle,
+}
+
+/// Theme for the reorderable multi drag widget
 class ReorderableMultiDragTheme {
-  /// Background color for the selection bar
-  final Color selectionBarColor;
+  /// Default constructor for the theme
+  ReorderableMultiDragTheme({
+    this.dragHandleIcon = Icons.drag_handle,
+    this.dragHandleColor = Colors.grey,
+    this.dragHandleHoverColor = Colors.blue,
+    this.dragHandleGrabColor = Colors.green,
+    this.dragHandleSize = 24.0,
+    this.selectBoxColor = Colors.blue,
+    this.selectBoxIconColor = Colors.white,
+    this.selectBoxIconCheckedColor = Colors.white,
+    this.selectBoxCheckedColor = Colors.green,
+    this.selectBoxIconSize = 16.0,
+    this.draggedItemColor = const Color(0x880000FF), // Semitransparent blue
+    this.draggedItemBorderWidth = 1.0,
+    this.draggedItemBorderColor = Colors.blue,
+    this.draggedItemBorderRadius = 8.0,
+    this.itemBorderRadius = 8.0,
+    this.pointerThresholdDistance = 10.0,
+    this.autoScrollSpeed = 50.0,
+    this.autoScrollThreshold = 160.0,
+    this.dropTargetHeight = 4.0,
+    this.dropTargetColor = Colors.blue,
+    this.itemHorizontalMargin = 8.0,
+    this.itemVerticalMargin = 4.0,
+    this.selectedItemColor = const Color(0x442196F3), // Light blue with 27% opacity
+    this.itemColor = Colors.white,
+    this.selectionBarColor = const Color(0x442196F3), // Light blue with 27% opacity
+    this.dragStyle = DragStyle.stackedStyle,
+  });
 
-  /// Background color for selected items
-  final Color selectedItemColor;
+  /// Icon for the drag handle
+  final IconData dragHandleIcon;
 
-  /// Background color for non-selected items
-  final Color itemColor;
+  /// Color for the drag handle
+  final Color dragHandleColor;
+
+  /// Color for the drag handle when hovered
+  final Color dragHandleHoverColor;
+
+  /// Color for the drag handle when grabbed
+  final Color dragHandleGrabColor;
+
+  /// Size for the drag handle
+  final double dragHandleSize;
+
+  /// Color for the select box
+  final Color selectBoxColor;
+
+  /// Icon color for the select box
+  final Color selectBoxIconColor;
+
+  /// Icon color for the checked select box
+  final Color selectBoxIconCheckedColor;
+
+  /// Color for the checked select box
+  final Color selectBoxCheckedColor;
+
+  /// Size for the select box icon
+  final double selectBoxIconSize;
+
+  /// Color for the dragged item
+  final Color draggedItemColor;
+
+  /// Border width for the dragged item
+  final double draggedItemBorderWidth;
 
   /// Border color for the dragged item
   final Color draggedItemBorderColor;
 
-  /// Border radius for items
+  /// Border radius for the dragged item
+  final double draggedItemBorderRadius;
+
+  /// Border radius for the item
   final double itemBorderRadius;
+
+  /// Threshold distance for the pointer
+  final double pointerThresholdDistance;
+
+  /// Speed for auto scroll
+  final double autoScrollSpeed;
+
+  /// Threshold for auto scroll
+  final double autoScrollThreshold;
+
+  /// Height for the drop target
+  final double dropTargetHeight;
+
+  /// Color for the drop target
+  final Color dropTargetColor;
 
   /// Horizontal margin for items
   final double itemHorizontalMargin;
@@ -26,131 +114,54 @@ class ReorderableMultiDragTheme {
   /// Vertical margin for items
   final double itemVerticalMargin;
 
-  /// Maximum stack offset for cards
-  final double maxStackOffset;
+  /// Color for selected items
+  final Color selectedItemColor;
 
-  /// Maximum rotation for cards in the stack
-  final double maxStackRotation;
+  /// Color for items
+  final Color itemColor;
 
-  /// Color for the drop target highlight
-  final Color dropTargetColor;
+  /// Color for the selection bar
+  final Color selectionBarColor;
 
-  /// Height of the drop target highlight
-  final double dropTargetHeight;
+  /// Style for the dragged item
+  final DragStyle dragStyle;
 
-  /// Text style for the selection count
-  final TextStyle? selectionCountTextStyle;
-
-  /// Text style for the done button
-  final TextStyle? doneButtonTextStyle;
-
-  /// Creates a ReorderableMultiDragTheme with default or custom values.
-  const ReorderableMultiDragTheme({
-    this.selectionBarColor = const Color(0xFFF5F5F5),
-    this.selectedItemColor = const Color(0xFFE3F2FD),
-    this.itemColor = Colors.white,
-    this.draggedItemBorderColor = Colors.blue,
-    this.itemBorderRadius = 8.0,
-    this.itemHorizontalMargin = 8.0,
-    this.itemVerticalMargin = 4.0,
-    this.maxStackOffset = 8.0,
-    this.maxStackRotation = 2.0,
-    this.dropTargetColor = const Color(0x4D0000FF),
-    this.dropTargetHeight = 4.0,
-    this.selectionCountTextStyle,
-    this.doneButtonTextStyle,
-  });
-
-  /// Creates a copy of this theme with the given fields replaced with new values.
-  ReorderableMultiDragTheme copyWith({
-    Color? selectionBarColor,
-    Color? selectedItemColor,
-    Color? itemColor,
-    Color? draggedItemBorderColor,
-    double? itemBorderRadius,
-    double? itemHorizontalMargin,
-    double? itemVerticalMargin,
-    double? maxStackOffset,
-    double? maxStackRotation,
-    Color? dropTargetColor,
-    double? dropTargetHeight,
-    TextStyle? selectionCountTextStyle,
-    TextStyle? doneButtonTextStyle,
+  /// Build style for the dragged item
+  Widget buildStyle<T>({
+    required BuildContext context,
+    required T draggedItem,
+    required List<T> selectedItems,
+    required int draggedItemIndex,
+    required Widget Function(BuildContext, T, int, bool, bool) itemBuilder,
   }) {
-    return ReorderableMultiDragTheme(
-      selectionBarColor: selectionBarColor ?? this.selectionBarColor,
-      selectedItemColor: selectedItemColor ?? this.selectedItemColor,
-      itemColor: itemColor ?? this.itemColor,
-      draggedItemBorderColor: draggedItemBorderColor ?? this.draggedItemBorderColor,
-      itemBorderRadius: itemBorderRadius ?? this.itemBorderRadius,
-      itemHorizontalMargin: itemHorizontalMargin ?? this.itemHorizontalMargin,
-      itemVerticalMargin: itemVerticalMargin ?? this.itemVerticalMargin,
-      maxStackOffset: maxStackOffset ?? this.maxStackOffset,
-      maxStackRotation: maxStackRotation ?? this.maxStackRotation,
-      dropTargetColor: dropTargetColor ?? this.dropTargetColor,
-      dropTargetHeight: dropTargetHeight ?? this.dropTargetHeight,
-      selectionCountTextStyle: selectionCountTextStyle ?? this.selectionCountTextStyle,
-      doneButtonTextStyle: doneButtonTextStyle ?? this.doneButtonTextStyle,
-    );
-  }
-
-  /// Creates a theme that's a combination of this theme and another theme.
-  ReorderableMultiDragTheme merge(ReorderableMultiDragTheme? other) {
-    if (other == null) return this;
-    return copyWith(
-      selectionBarColor: other.selectionBarColor,
-      selectedItemColor: other.selectedItemColor,
-      itemColor: other.itemColor,
-      draggedItemBorderColor: other.draggedItemBorderColor,
-      itemBorderRadius: other.itemBorderRadius,
-      itemHorizontalMargin: other.itemHorizontalMargin,
-      itemVerticalMargin: other.itemVerticalMargin,
-      maxStackOffset: other.maxStackOffset,
-      maxStackRotation: other.maxStackRotation,
-      dropTargetColor: other.dropTargetColor,
-      dropTargetHeight: other.dropTargetHeight,
-      selectionCountTextStyle: other.selectionCountTextStyle,
-      doneButtonTextStyle: other.doneButtonTextStyle,
-    );
-  }
-
-  /// Creates a dark theme version
-  factory ReorderableMultiDragTheme.dark() {
-    return const ReorderableMultiDragTheme(
-      selectionBarColor: Color(0xFF303030),
-      selectedItemColor: Color(0xFF1E3A5F),
-      itemColor: Color(0xFF424242),
-      draggedItemBorderColor: Colors.lightBlue,
-    );
-  }
-
-  /// Creates a light theme version
-  factory ReorderableMultiDragTheme.light() {
-    return const ReorderableMultiDragTheme();
-  }
-
-  /// Creates a theme based on the current brightness
-  factory ReorderableMultiDragTheme.fromBrightness(Brightness brightness) {
-    return brightness == Brightness.dark
-        ? ReorderableMultiDragTheme.dark()
-        : ReorderableMultiDragTheme.light();
-  }
-
-  /// Creates a theme based on the current color scheme
-  factory ReorderableMultiDragTheme.fromColorScheme(ColorScheme colorScheme) {
-    return ReorderableMultiDragTheme(
-      selectionBarColor: colorScheme.surface,
-      selectedItemColor: colorScheme.primaryContainer,
-      itemColor: colorScheme.surface,
-      draggedItemBorderColor: colorScheme.primary,
-      selectionCountTextStyle: TextStyle(
-        color: colorScheme.onSurface,
-        fontWeight: FontWeight.bold,
-      ),
-      doneButtonTextStyle: TextStyle(
-        color: colorScheme.primary,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+    switch (dragStyle) {
+      case DragStyle.stackedStyle:
+        return StackedStyle.build(
+          context: context,
+          draggedItem: draggedItem,
+          selectedItems: selectedItems,
+          draggedItemIndex: draggedItemIndex,
+          theme: this,
+          itemBuilder: itemBuilder,
+        );
+      case DragStyle.animatedCardStyle:
+        return AnimatedCardStyle.build(
+          context: context,
+          draggedItem: draggedItem,
+          selectedItems: selectedItems,
+          draggedItemIndex: draggedItemIndex,
+          theme: this,
+          itemBuilder: itemBuilder,
+        );
+      case DragStyle.minimalistStyle:
+        return MinimalistStyle.build(
+          context: context,
+          draggedItem: draggedItem,
+          selectedItems: selectedItems,
+          draggedItemIndex: draggedItemIndex,
+          theme: this,
+          itemBuilder: itemBuilder,
+        );
+    }
   }
 }

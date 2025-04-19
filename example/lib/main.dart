@@ -101,6 +101,9 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
   // Selected items
   List<ItemData> selectedItems = [];
+  
+  // Current drag style
+  DragStyle _currentDragStyle = DragStyle.stackedStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +113,35 @@ class _ExampleScreenState extends State<ExampleScreen> {
       ),
       body: Column(
         children: [
+          // Drag style selector
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                const Text('Drag Style:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButton<DragStyle>(
+                    value: _currentDragStyle,
+                    isExpanded: true,
+                    onChanged: (DragStyle? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _currentDragStyle = newValue;
+                        });
+                      }
+                    },
+                    items: DragStyle.values.map<DropdownMenuItem<DragStyle>>((DragStyle style) {
+                      return DropdownMenuItem<DragStyle>(
+                        value: style,
+                        child: Text(_getDragStyleDisplayName(style)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Basic usage example
           Expanded(
             child: ReorderableMultiDragList<ItemData>(
@@ -150,10 +182,8 @@ class _ExampleScreenState extends State<ExampleScreen> {
               itemHeight: 80.0,
               showDividers: true,
               theme: ReorderableMultiDragTheme(
-                selectionBarColor: Theme.of(context).colorScheme.surface,
-                selectedItemColor: Theme.of(context).colorScheme.primaryContainer,
-                itemColor: Theme.of(context).colorScheme.surface,
                 draggedItemBorderColor: Theme.of(context).colorScheme.primary,
+                dragStyle: _currentDragStyle,
               ),
             ),
           ),
@@ -169,6 +199,20 @@ class _ExampleScreenState extends State<ExampleScreen> {
         ),
       ),
     );
+  }
+  
+  // Helper method to get a user-friendly name for drag styles
+  String _getDragStyleDisplayName(DragStyle style) {
+    switch (style) {
+      case DragStyle.stackedStyle:
+        return 'Stacked Style';
+      case DragStyle.animatedCardStyle:
+        return 'Animated Cards';
+      case DragStyle.minimalistStyle:
+        return 'Minimalist';
+      default:
+        return style.toString().split('.').last;
+    }
   }
 }
 
@@ -236,15 +280,9 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     super.didChangeDependencies();
     // Create custom theme based on app theme
     customTheme = ReorderableMultiDragTheme(
-      selectionBarColor: Theme.of(context).colorScheme.primaryContainer,
-      selectedItemColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-      itemColor: Theme.of(context).colorScheme.surface,
       draggedItemBorderColor: Theme.of(context).colorScheme.primary,
       itemBorderRadius: 12.0,
-      itemHorizontalMargin: 16.0,
-      itemVerticalMargin: 8.0,
-      maxStackOffset: 12.0,
-      maxStackRotation: 3.0,
+      dragStyle: DragStyle.stackedStyle,
     );
   }
 
@@ -926,9 +964,6 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                       ),
                     ),
                     theme: ReorderableMultiDragTheme(
-                      selectionBarColor: Theme.of(context).colorScheme.surface,
-                      selectedItemColor: Theme.of(context).colorScheme.primaryContainer,
-                      itemColor: Theme.of(context).colorScheme.surface,
                       draggedItemBorderColor: Theme.of(context).colorScheme.primary,
                     ),
                   ),

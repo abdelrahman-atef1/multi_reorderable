@@ -119,7 +119,7 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     this.selectionBarBuilder,
     this.dragHandleBuilder,
     this.listKey,
-  }) : theme = theme ?? const ReorderableMultiDragTheme();
+  }) : theme = theme ?? ReorderableMultiDragTheme();
 
   @override
   State<ReorderableMultiDragList<T>> createState() => ReorderableMultiDragListState<T>();
@@ -600,107 +600,16 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
   Widget _buildDraggedStack(BuildContext context) {
     if (_draggedItemIndex == null || _dragPosition == null) return const SizedBox();
     
-    final List<Widget> stackItems = [];
     final draggedItem = widget.items[_draggedItemIndex!];
+    final dragPosition = _dragPosition!;
     
-    // Get all selected items in order (except the dragged one)
-    final selectedItems = _selectedItems
-        .where((item) => item != draggedItem)
-        .toList();
-    
-    // Add all selected items to the stack
-    for (int i = 0; i < selectedItems.length; i++) {
-      final item = selectedItems[i];
-      final itemIndex = widget.items.indexOf(item);
-      
-      if (itemIndex < 0) continue;
-      
-      // Calculate the position in the stack (0 is bottom, length-1 is top)
-      final int stackPosition = i;
-      final int stackTotal = selectedItems.length;
-      
-      // Build the item widget
-      final itemWidget = widget.itemBuilder(
-        context,
-        item,
-        itemIndex,
-        true,
-        false,
-      );
-      
-      // Create a cleaner stacking pattern with consistent offsets
-      // Position items in a straight stack with no crossing
-      final double stackOffsetVertical = 15.0; // pixels
-      final double stackOffsetHorizontal = 10.0; // pixels
-      
-      // Calculate offset based on position in stack - no rotation
-      // Items stack neatly behind the main item
-      final int relativePos = stackTotal - stackPosition;
-      
-      // Calculate precise offsets for a simple staggered arrangement
-      final double xOffset = stackOffsetHorizontal * relativePos;
-      final double yOffset = stackOffsetVertical * relativePos;
-      
-      // Create a widget for this item in the stack
-      stackItems.add(
-        Transform.translate(
-          offset: Offset(xOffset, yOffset),
-          child: Opacity(
-            opacity: math.max(0.7, 1.0 - (0.1 * relativePos)),
-            child: Container(
-              decoration: BoxDecoration(
-                color: widget.theme.selectedItemColor,
-                borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
-                border: Border.all(
-                  color: Colors.black12,
-                  width: 1.0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: itemWidget,
-            ),
-          ),
-        ),
-      );
-    }
-    
-    // Build the dragged item widget
-    final draggedItemWidget = widget.itemBuilder(
-      context,
-      draggedItem,
-      _draggedItemIndex!,
-      true,
-      true,
-    );
-    
-    // Add the dragged item on top
-    stackItems.add(
-      Container(
-        margin: const EdgeInsets.only(top: 5),
-        decoration: BoxDecoration(
-          color: widget.theme.selectedItemColor,
-          borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
-          border: Border.all(
-            color: widget.theme.draggedItemBorderColor,
-            width: 3,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: widget.theme.draggedItemBorderColor.withOpacity(0.3),
-              blurRadius: 12,
-              spreadRadius: 2,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: draggedItemWidget,
-      ),
+    // Build the dragged items widget based on the theme style
+    final Widget content = widget.theme.buildStyle(
+      context: context,
+      draggedItem: draggedItem,
+      selectedItems: List<T>.from(_selectedItems),
+      draggedItemIndex: _draggedItemIndex!,
+      itemBuilder: widget.itemBuilder,
     );
     
     // Get global position and screen info
@@ -708,14 +617,13 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     if (box == null) return const SizedBox();
     
     final Size screenSize = MediaQuery.of(context).size;
-    final Offset dragPosition = _dragPosition!;
     
     // Calculate the width and height of the stack
     final double stackWidth = 300.0;
-    final double stackHeight = widget.itemHeight + 20.0;
+    final double stackHeight = 150.0; // Ensure enough height for all drag styles
     
     // Position the stack directly under the finger/cursor
-    // with minimal offset to ensure visibility
+    // with offset to ensure visibility
     final double fingerOffset = 150.0; // Position well above finger
     final double left = dragPosition.dx - (stackWidth / 2); // Center horizontally 
     final double top = dragPosition.dy - fingerOffset; // Position above finger
@@ -724,20 +632,15 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     final double boundedLeft = math.max(0, math.min(left, screenSize.width - stackWidth));
     final double boundedTop = math.max(0, math.min(top, screenSize.height - stackHeight));
     
-    // Create the final stack
+    // Create the final positioned element
     return Positioned(
       left: boundedLeft,
       top: boundedTop,
+      width: stackWidth,
+      height: stackHeight,
       child: Material(
         color: Colors.transparent,
-        child: SizedBox(
-          width: stackWidth,
-          child: Stack(
-            alignment: Alignment.topCenter,
-            clipBehavior: Clip.none,
-            children: stackItems,
-          ),
-        ),
+        child: content,
       ),
     );
   }
