@@ -34,11 +34,35 @@ A powerful and customizable Flutter widget for multi-selection and animated reor
 ## Examples
 
 ### Simple Usage
-![Simple Example](https://i.ibb.co/6cLfNdQj/2025-04-04-04-37-01.gif)
+![Simple Example](https://i.ibb.co/RGNr8JKQ/2025-04-19-04-42-19.gif)
 
 ### Advanced Usage
 ![Advanced Example](https://i.ibb.co/7fyyxN7/2025-04-04-04-39-17.gif)
 
+## Drag Styles
+
+### Stacked Style
+The default style stacks items neatly behind the dragged item:
+![Stacked Style](https://i.ibb.co/RGNr8JKQ/2025-04-19-04-42-19.gif)
+
+### Animated Cards
+Provides a modern animated card interface for your dragged items:
+![Animated Cards](https://i.ibb.co/ZpZXhFZJ/2025-04-19-04-42-09.gif)
+
+### Minimalist
+A clean, simple approach with minimal visual elements:
+![Minimalist Style](https://i.ibb.co/9k6mH3ZR/2025-04-19-04-41-56.gif)
+
+Changing between styles is simple:
+```dart
+ReorderableMultiDragTheme(
+  // Normal theme properties
+  draggedItemBorderColor: Colors.blue,
+  itemBorderRadius: 8.0,
+  // Set the drag style
+  dragStyle: DragStyle.animatedCardStyle, // or .stackedStyle, .minimalistStyle
+)
+```
 
 ## Installation
 
@@ -46,7 +70,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  multi_reorderable: ^0.0.1
+  multi_reorderable: ^0.1.0
 ```
 
 Then import it in your Dart code:

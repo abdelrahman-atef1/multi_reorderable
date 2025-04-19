@@ -1,3 +1,12 @@
+## 0.1.0
+
+* Fixed index out of range error when dragging multiple items to the bottom of the list
+* Enhanced stacked style appearance with solid white background for dragged items
+* Improved visual hierarchy in the stacked style with proper opacity and transparency
+* Fixed various edge cases in the reordering functionality
+* Improved bounds checking in DragListUtils for safer reordering operations
+* Optimized drag handling for a smoother user experience
+
 ## 0.0.1
 
 * Initial release

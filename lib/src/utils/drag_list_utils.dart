@@ -10,29 +10,49 @@ class DragListUtils {
     required Map<T, int> targetPositions,
     required void Function(List<T> reorderedItems) onReorder,
   }) {
-    if (targetPositions.isEmpty) return;
-
-    // Create a new list with the reordered items
-    final List<T> newItems = List<T>.from(items);
+    // Create a copy of the list to work with
+    final List<T> newList = List<T>.from(items);
     
-    // Remove all selected items
-    newItems.removeWhere((item) => selectedItems.contains(item));
+    // First, remove all selected items from their original positions
+    // Sort so we remove from highest index to lowest to avoid shifting issues
+    final List<MapEntry<T, int>> sortedOriginal = originalPositions.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     
-    // Get the target index (where to insert the selected items)
-    int targetIndex = targetPositions.values.first;
+    for (final entry in sortedOriginal) {
+      if (entry.value < newList.length) {
+        newList.removeAt(entry.value);
+      }
+    }
     
-    // Get the selected items in their original order
-    final List<T> selectedItemsInOrder = selectedItems
-        .toList()
-        .where((item) => originalPositions.containsKey(item))
-        .toList()
-      ..sort((a, b) => originalPositions[a]!.compareTo(originalPositions[b]!));
+    // Get the target position (they should all be the same)
+    if (targetPositions.isEmpty) {
+      onReorder(newList);
+      return;
+    }
+    
+    // Get first target position
+    int targetPosition = targetPositions.values.first;
+    
+    // Ensure the target position is within bounds after removing items
+    targetPosition = targetPosition.clamp(0, newList.length);
     
     // Insert all selected items at the target position
-    newItems.insertAll(targetIndex, selectedItemsInOrder);
+    // Sort by original position to maintain original relative order
+    final List<MapEntry<T, int>> sortedEntries = originalPositions.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+    
+    for (final entry in sortedEntries) {
+      if (targetPosition <= newList.length) {
+        newList.insert(targetPosition, entry.key);
+        targetPosition++; // Increment for each insert
+      } else {
+        // Safely add to the end if we somehow exceed bounds
+        newList.add(entry.key);
+      }
+    }
     
     // Notify about the reordering
-    onReorder(newItems);
+    onReorder(newList);
   }
 
   /// Calculates the optimal stack offset for a given number of items.
