@@ -195,34 +195,70 @@ ReorderableMultiDragList<String>(
 
 ### Pagination
 
-Improved pagination that calculates page numbers dynamically based on items count:
+The widget now offers improved pagination with external control to prevent duplicate page loading:
 
 ```dart
 // Create a global key to access the widget's state
 final listKey = GlobalKey<ReorderableMultiDragListState<MyItem>>();
+
+// Track your current page in your state
+int currentPage = 1;
 
 // In your build method
 ReorderableMultiDragList<MyItem>(
   listKey: listKey,
   items: myItems,
   pageSize: 20, // Number of items per page
+  currentPage: currentPage, // Pass your current page
+  totalPages: totalPages, // Optional - if you know the total number of pages
   onPageRequest: (page, pageSize) async {
-    print('Loading page: $page'); // Page number is calculated from items.length
+    print('Loading page: $page'); 
     
-    // Update your API request with the correct page number
-    final request = YourRequestObject()..page = page;
-    
-    // Load more items when user scrolls
-    final newItems = await yourApi.fetchItems(request);
+    // Make your API request with the provided page number
+    final response = await yourApi.fetchItems(page: page, pageSize: pageSize);
     
     setState(() {
       // Add new items to your list (not replace)
-      myItems.addAll(newItems);
+      myItems.addAll(response.items);
+      // IMPORTANT: Update your current page to match the loaded page
+      currentPage = page;
     });
+  },
+  // Customize loading indicator (optional)
+  loadingWidgetBuilder: (context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 8),
+        const Text('Loading more items...'),
+      ],
+    );
+  },
+  // Customize "no more items" message (optional)
+  noMoreItemsBuilder: (context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: const Text(
+        "You've reached the end of the list",
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+          color: Colors.grey,
+        ),
+      ),
+    );
   },
   // ... other properties
 )
 ```
+
+#### Key Pagination Features:
+
+1. **External page control**: The `currentPage` parameter lets you track and control page loading externally
+2. **Prevent duplicate loading**: Widget uses the provided `currentPage` to ensure pages aren't loaded twice
+3. **Total pages limit**: Optional `totalPages` parameter to stop pagination at a known limit
+4. **Smart empty state**: Shows appropriate messages for both loading and "no more items" states
+5. **Customizable indicators**: Custom builders for both loading indicators and end-of-list messages
 
 ### Pull-to-Refresh
 

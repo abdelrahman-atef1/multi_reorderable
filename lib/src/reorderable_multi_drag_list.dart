@@ -134,8 +134,13 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   final Widget Function(BuildContext context)? noMoreItemsBuilder;
 
   /// Pagination parameters
-  final int? pageSize;
-  
+  final int pageSize;
+
+  /// Current page for pagination (Should start from 1 and increment by 1 each time)
+  final int currentPage;
+
+  /// Total number of pages
+  final int? totalPages;
   /// Callback for requesting more items when pagination occurs
   /// 
   /// This callback is called when the user scrolls near the end of the list
@@ -240,6 +245,8 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     required this.onReorder,
     this.onPageRequest,
     this.pageSize = 20,
+    this.currentPage = 1,
+    this.totalPages,
     this.onSelectionChanged,
     this.onDone,
     this.initialSelection,
@@ -323,7 +330,12 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
   bool _isLoading = false;
   // Remove current page state - we'll calculate it dynamically
   // int _currentPage = 0;
-  bool _hasMoreItems = true;
+
+  bool get _hasMoreItems {
+    int pages = widget.totalPages ?? (((widget.items.length)/ widget.pageSize).ceil() + 1);
+    return widget.currentPage < pages;
+  }
+
   // Track the previous items length to detect actual new items
   int _previousItemsLength = 0;
   // Track if pagination is initialized
@@ -398,10 +410,10 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
       // Check for newly added items (for pagination detection)
       if (widget.items.length > _previousItemsLength) {
         // Update hasMoreItems based on actual new items being added
-        _hasMoreItems = true;
+        // _hasMoreItems = true;
       } else if (widget.items.length == _previousItemsLength && _isLoading) {
         // If no new items were added during loading, we've reached the end
-        _hasMoreItems = false;
+        // _hasMoreItems = false;
       }
       
       // Update previous length tracker
@@ -949,7 +961,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
           // we've likely reached the end
           if (!newItemsAdded || 
               (widget.items.length - initialItemsLength) < pageSize) {
-            _hasMoreItems = false;
+            // _hasMoreItems = false;
             debugPrint('No more items to load. hasMoreItems set to false');
           }
           
@@ -981,7 +993,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     if (resetPagination) {
       setState(() {
         // No need to reset _currentPage since we're calculating it dynamically
-        _hasMoreItems = true;
+        // _hasMoreItems = true;
         _isLoading = false;
         _previousItemsLength = widget.items.length;
         debugPrint('Pagination reset: _hasMoreItems = true');
@@ -1023,7 +1035,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     // Set initial loading state
     setState(() {
       _isLoading = true;
-      _hasMoreItems = true;
+      // _hasMoreItems = true;
       // No need to reset _currentPage since we're calculating it dynamically
     });
     

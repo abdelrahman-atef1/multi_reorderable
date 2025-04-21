@@ -1,5 +1,23 @@
+# [0.1.3]
 
-# [0.1.2] - 2023-05-19
+### Added
+* `currentPage` parameter to control pagination from outside the widget
+* `totalPages` parameter to limit pagination requests
+* Added better empty list handling with dedicated "No items available" message
+* Improved "No more items" indicator visibility
+
+### Changed
+* Refactored pagination to prevent duplicate page loading
+* Modified page calculation to use the external `currentPage` value
+* Better initial load handling to prevent unnecessary requests
+* Enhanced error handling during pagination with proper UI feedback
+
+### Fixed
+* Fixed issue where the widget would load multiple pages on initialization
+* Fixed "No more items" message not showing in certain cases
+* Fixed pagination when fewer items than page size are returned
+
+## [0.1.2]
 
 ### Added
 * Pull-to-refresh functionality with `RefreshIndicator`
