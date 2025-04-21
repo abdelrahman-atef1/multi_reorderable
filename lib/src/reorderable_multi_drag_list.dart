@@ -338,8 +338,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
 
   // Track the previous items length to detect actual new items
   int _previousItemsLength = 0;
-  // Track if pagination is initialized
-  bool _isPaginationInitialized = false;
+
 
   @override
   void initState() {
@@ -347,10 +346,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     _selectedItems = Set<T>.from(widget.initialSelection ?? []);
     _isSelectionMode = _selectedItems.isNotEmpty;
     _previousItemsLength = widget.items.length;
-    
-    // No longer need to initialize current page
-    // _currentPage = 0;
-    _isPaginationInitialized = true;
+
 
     // Initialize animation controllers
     _dragAnimationController = AnimationController(
@@ -938,7 +934,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     try {
       // Calculate the next page based on item count and page size
       // (pages start at 1, so we add 1 to the calculated value)
-      final pageSize = widget.pageSize ?? 20;
+      final pageSize = widget.pageSize;
       final nextPage = (initialItemsLength / pageSize).floor() + 1;
       
       // Debug printing to help troubleshoot
@@ -1045,7 +1041,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
         await widget.onRefresh!();
       } else if (widget.onPageRequest != null) {
         // If no specific refresh callback is provided, use the page request callback with page 1
-        await widget.onPageRequest!(1, widget.pageSize ?? 20);
+        await widget.onPageRequest!(1, widget.pageSize);
       }
     } catch (e) {
       debugPrint('Error during refresh: $e');
