@@ -17,14 +17,14 @@ class StackedStyle {
     final List<Widget> stackItems = [];
     
     // Base dimensions for the stack
-    final double itemWidth = 300.0;
-    final double itemHeight = 80.0;
-    final double contentWidth = itemWidth * 0.95;
-    final double contentHeight = itemHeight * 0.9;
+    const double itemWidth = 300.0;
+    const double itemHeight = 80.0;
+    const double contentWidth = itemWidth * 0.95;
+    const double contentHeight = itemHeight * 0.9;
     
     // Stack offset constants
-    final double stackOffsetVertical = 15.0; // pixels
-    final double stackOffsetHorizontal = 10.0; // pixels
+    const double stackOffsetVertical = 15.0; // pixels
+    const double stackOffsetHorizontal = 10.0; // pixels
     
     // Get all selected items in order (except the dragged one)
     final filteredItems = selectedItems
@@ -77,7 +77,7 @@ class StackedStyle {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
@@ -128,7 +128,7 @@ class StackedStyle {
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.draggedItemBorderColor.withOpacity(0.3),
+              color: theme.draggedItemBorderColor.withValues(alpha: 0.3),
               blurRadius: 12,
               spreadRadius: 2,
               offset: const Offset(0, 6),

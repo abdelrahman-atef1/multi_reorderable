@@ -14,12 +14,12 @@ class MinimalistStyle {
     required Widget Function(BuildContext, T, int, bool, bool) itemBuilder,
   }) {
     // Container dimensions
-    final double containerWidth = 280.0;
-    final double containerHeight = 120.0;
+    const double containerWidth = 280.0;
+    const double containerHeight = 120.0;
     
     // Item dimensions
-    final double itemWidth = 260.0;
-    final double itemHeight = 80.0;
+    const double itemWidth = 260.0;
+    const double itemHeight = 80.0;
     
     // Create the main item widget
     final Widget mainItemWidget = itemBuilder(
@@ -46,7 +46,7 @@ class MinimalistStyle {
             borderRadius: BorderRadius.circular(theme.itemBorderRadius),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 8,
                 spreadRadius: 0,
                 offset: const Offset(0, 4),

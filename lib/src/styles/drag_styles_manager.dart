@@ -27,12 +27,12 @@ class DragStylesManager {
     final Size screenSize = MediaQuery.of(context).size;
     
     // Calculate the width and height of the stack
-    final double stackWidth = 300.0;
+    const double stackWidth = 300.0;
     final double stackHeight = itemHeight + 20.0;
     
     // Position the stack directly under the finger/cursor
     // with offset to ensure visibility
-    final double fingerOffset = 150.0; // Position above finger
+    const double fingerOffset = 150.0; // Position above finger
     final double left = dragPosition.dx - (stackWidth / 2); // Center horizontally 
     final double top = dragPosition.dy - fingerOffset; // Position above finger
     

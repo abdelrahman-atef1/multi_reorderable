@@ -917,12 +917,12 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     final Size screenSize = MediaQuery.of(context).size;
     
     // Calculate the width and height of the stack
-    final double stackWidth = 300.0;
-    final double stackHeight = 150.0; // Ensure enough height for all drag styles
+    const double stackWidth = 300.0;
+    const double stackHeight = 150.0; // Ensure enough height for all drag styles
     
     // Position the stack directly under the finger/cursor
     // with offset to ensure visibility
-    final double fingerOffset = 150.0; // Position well above finger
+    const double fingerOffset = 150.0; // Position well above finger
     final double left = dragPosition.dx - (stackWidth / 2); // Center horizontally 
     final double top = dragPosition.dy - fingerOffset; // Position above finger
     
@@ -1224,7 +1224,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
           borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 2,
               offset: const Offset(0, 1),
             ),
@@ -1408,7 +1408,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
                 borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -1469,7 +1469,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
                                     ),
                                   ),
                                   child: isSelected
-                                      ? Icon(
+                                      ? const Icon(
                                           Icons.check,
                                           size: 10,
                                           color: Colors.white,

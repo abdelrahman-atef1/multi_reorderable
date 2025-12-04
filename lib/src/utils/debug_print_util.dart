@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 
 /// Debug printing utility for multi_reorderable library
 /// 
-/// All debug prints are prefixed with [LIB_PREFIX] to make them easy to filter.
+/// All debug prints are prefixed with [libPrefix] to make them easy to filter.
 /// Use this utility instead of direct print() or debugPrint() calls.
 class DebugPrintUtil {
   /// Library prefix for all debug messages
-  static const String LIB_PREFIX = '[multi_reorderable]';
+  static const String libPrefix = '[multi_reorderable]';
   
 
   static void _printDebugInfo(Object? object) {
@@ -30,7 +30,7 @@ class DebugPrintUtil {
   /// // Output: [multi_reorderable] Item reordered
   /// ```
   static void print(String message) {
-    _printDebugInfo('$LIB_PREFIX $message');
+    _printDebugInfo('$libPrefix $message');
   }
   
   /// Print a debug message with a tag/category
@@ -41,7 +41,7 @@ class DebugPrintUtil {
   /// // Output: [multi_reorderable] [DRAG] Drag started at index 5
   /// ```
   static void printTagged(String tag, String message) {
-    _printDebugInfo('$LIB_PREFIX [$tag] $message');
+    _printDebugInfo('$libPrefix [$tag] $message');
   }
   
   /// Print a debug message with formatted data
@@ -52,7 +52,7 @@ class DebugPrintUtil {
   /// // Output: [multi_reorderable] Reordering: {index: 5, count: 3}
   /// ```
   static void printData(String label, dynamic data) {
-    _printDebugInfo('$LIB_PREFIX $label: $data');
+    _printDebugInfo('$libPrefix $label: $data');
   }
   
   /// Print an error message
@@ -63,12 +63,12 @@ class DebugPrintUtil {
   /// // Output: [multi_reorderable] [ERROR] Failed to reorder items: ...
   /// ```
   static void printError(String message, [dynamic error, StackTrace? stackTrace]) {
-    _printDebugInfo('$LIB_PREFIX [ERROR] $message');
+    _printDebugInfo('$libPrefix [ERROR] $message');
     if (error != null) {
-      _printDebugInfo('$LIB_PREFIX [ERROR] Error details: $error');
+      _printDebugInfo('$libPrefix [ERROR] Error details: $error');
     }
     if (stackTrace != null) {
-      _printDebugInfo('$LIB_PREFIX [ERROR] Stack trace: $stackTrace');
+      _printDebugInfo('$libPrefix [ERROR] Stack trace: $stackTrace');
     }
   }
   
@@ -80,7 +80,7 @@ class DebugPrintUtil {
   /// // Output: [multi_reorderable] [WARNING] Target position out of bounds
   /// ```
   static void printWarning(String message) {
-    _printDebugInfo('$LIB_PREFIX [WARNING] $message');
+    _printDebugInfo('$libPrefix [WARNING] $message');
   }
   
   /// Print debug info for drag events

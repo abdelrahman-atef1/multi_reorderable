@@ -1,3 +1,24 @@
+# [0.2.0]
+
+### Added
+* **Single/Multi Mode Support**: Added `ReorderableMode` enum to switch between single-item reordering (using Flutter's `ReorderableListView`) and multi-item selection mode (default)
+* **Global Configuration**: Added `ReorderableMultiDragConfig` class for setting global default builders (e.g., empty state builder) that apply to all widgets automatically
+* **Empty State Builder**: Added `emptyStateBuilder` parameter and global config support for customizing empty state display
+* **Debug Printing Utility**: Added `DebugPrintUtil` class with categorized debug messages prefixed with `[multi_reorderable]` for easy filtering and debugging
+* **Enhanced onReorder Callback**: Updated callback signature to provide `newIndex`, `movedItems`, and `reorderedItems` for easier API integration
+* **Compact Selection Controls**: Redesigned selection mode UI with combined checkbox and drag handle in a vertical stack for ultra-compact layout
+
+### Changed
+* **Breaking Change**: `onReorder` callback signature changed from `void Function(List<T> reorderedItems)` to `void Function(int newIndex, List<T> movedItems, List<T> reorderedItems)`
+* **Selection Mode Layout**: Reduced horizontal margins to 0 in selection mode for maximum space efficiency
+* **Drag Handle**: Reduced drag handle width from 44px to 32px with combined checkbox/drag handle widget
+* **Target Position Calculation**: Improved target position adjustment logic when items are removed before the target position
+
+### Fixed
+* Fixed target_id calculation for API calls - now correctly identifies the item after moved items
+* Fixed selection count display in debug logs
+* Improved reordering logic for moving items from end to beginning positions
+
 # [0.1.3]
 
 ### Added

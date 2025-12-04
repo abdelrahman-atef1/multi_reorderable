@@ -299,7 +299,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: Row(
@@ -385,7 +385,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                   false
                 ),
                 selectionBarBuilder: (context, selectedCount, onDone) {
-                  return SizedBox();
+                  return const SizedBox();
                 },
               ),
             ),
@@ -560,77 +560,8 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
         Icons.drag_indicator,
         color: isDragging
             ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+            : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         size: 24,
-      ),
-    );
-  }
-
-  Widget _buildCustomSelectionCount(
-    BuildContext context,
-    int count,
-    int total,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      child: Text(
-        '$count of $total tasks selected',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCustomDoneButton(
-    BuildContext context,
-    VoidCallback onPressed,
-    int selectedCount,
-  ) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: const Icon(Icons.task_alt),
-      label: Text('Complete $selectedCount tasks'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      ),
-    );
-  }
-
-  Widget _buildEmptyPlaceholder(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.task,
-            size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No tasks available',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Add a new task using the + button',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _addNewTask,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Task'),
-          ),
-        ],
       ),
     );
   }
@@ -658,7 +589,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     return Container(
       padding: const EdgeInsets.all(4.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4.0),
       ),
       child: Icon(
@@ -678,7 +609,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     } else if (difference == 1) {
       return 'Tomorrow';
     } else if (difference > 1 && difference < 7) {
-      return '${difference} days';
+      return '$difference days';
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
@@ -890,6 +821,7 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
     listKey.currentState?.refreshItems(resetPagination: true);
     
     // Show success message
+    // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Data refreshed successfully'),
@@ -961,7 +893,7 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                     },
                     headerWidget: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: const Text(
                         'Scroll down to load more items',
                         style: TextStyle(fontStyle: FontStyle.italic),

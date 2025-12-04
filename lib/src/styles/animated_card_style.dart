@@ -17,16 +17,16 @@ class AnimatedCardStyle {
     final List<Widget> cards = [];
     
     // Main container dimensions
-    final double containerWidth = 300.0;
-    final double containerHeight = 150.0;
+    const double containerWidth = 300.0;
+    const double containerHeight = 150.0;
     
     // Item dimensions
-    final double itemWidth = 280.0;
-    final double itemHeight = 100.0;
+    const double itemWidth = 280.0;
+    const double itemHeight = 100.0;
     
     // Main item position (centered)
-    final double mainItemX = (containerWidth - itemWidth) / 2;
-    final double mainItemY = (containerHeight - itemHeight) / 2;
+    const double mainItemX = (containerWidth - itemWidth) / 2;
+    const double mainItemY = (containerHeight - itemHeight) / 2;
     
     // Add main item (dragged item)
     final Widget mainItemWidget = itemBuilder(
@@ -59,7 +59,7 @@ class AnimatedCardStyle {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.draggedItemBorderColor.withOpacity(0.3),
+                      color: theme.draggedItemBorderColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -104,7 +104,7 @@ class AnimatedCardStyle {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -127,7 +127,7 @@ class AnimatedCardStyle {
     }
     
     // Return the animated stack
-    return Container(
+    return SizedBox(
       width: containerWidth,
       height: containerHeight,
       child: Stack(
