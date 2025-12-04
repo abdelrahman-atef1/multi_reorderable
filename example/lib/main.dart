@@ -156,7 +156,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
                   ),
                 );
               },
-              onReorder: (reorderedItems) {
+              onReorder: (newIndex, movedItems, reorderedItems) {
                 setState(() {
                   items = reorderedItems;
                 });
@@ -331,7 +331,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                 itemBuilder: (context, task, index, isSelected, isDragging) {
                   return _buildTaskItem(task, index);
                 },
-                onReorder: (reorderedItems) {
+                onReorder: (newIndex, movedItems, reorderedItems) {
                   setState(() {
                     tasks = reorderedItems;
                   });
@@ -954,7 +954,7 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                         ),
                       );
                     },
-                    onReorder: (reorderedItems) {
+                    onReorder: (newIndex, movedItems, reorderedItems) {
                       setState(() {
                         items = reorderedItems;
                       });

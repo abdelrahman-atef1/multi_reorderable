@@ -5,8 +5,19 @@ import 'dart:math' as math;
 
 import 'theme/reorderable_multi_drag_theme.dart';
 import 'utils/drag_list_utils.dart';
+import 'utils/debug_print_util.dart';
+import 'reorderable_multi_drag_config.dart';
 
 // Export ReorderableMultiDragList and ReorderableMultiDragListState
+
+/// Mode for the reorderable list
+enum ReorderableMode {
+  /// Single item reordering using Flutter's built-in ReorderableListView
+  single,
+  
+  /// Multi-item selection and reordering using custom implementation
+  multi,
+}
 
 /// A custom reorderable widget that supports multi-selection and animated reordering.
 ///
@@ -28,7 +39,43 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   final Widget Function(BuildContext context, T item, int index, bool isSelected, bool isDragging) itemBuilder;
 
   /// Callback when items are reordered
-  final void Function(List<T> reorderedItems) onReorder;
+  /// 
+  /// Provides:
+  /// - [newIndex]: The index where items were inserted (first position of moved items in reordered list)
+  /// - [movedItems]: List of items that were moved (sorted by original position)
+  /// - [reorderedItems]: The complete reordered list
+  /// 
+  /// To calculate target_id for your API:
+  /// The target_id is the ID of the item that comes AFTER the moved items.
+  /// Calculate: `targetIndex = newIndex + movedItems.length`
+  /// - If `targetIndex < reorderedItems.length`: `target_id = reorderedItems[targetIndex].id`
+  /// - If moved to end: `target_id = movedItems.last.id`
+  /// 
+  /// Example:
+  /// ```dart
+  /// onReorder: (newIndex, movedItems, reorderedItems) {
+  ///   // Update local state
+  ///   setState(() {
+  ///     items = reorderedItems;
+  ///   });
+  ///   
+  ///   // Extract moved IDs
+  ///   final movedIds = movedItems.map((item) => item.id).toList();
+  ///   
+  ///   // Calculate target_id: item AFTER the moved items
+  ///   final indexAfterMoved = newIndex + movedItems.length;
+  ///   final targetId = indexAfterMoved < reorderedItems.length
+  ///       ? reorderedItems[indexAfterMoved].id
+  ///       : movedItems.last.id;
+  ///   
+  ///   // Call API
+  ///   api.post('/sorting', {
+  ///     'ids': movedIds,        // [307, 306]
+  ///     'target_id': targetId,  // ID of item at index (newIndex + movedItems.length)
+  ///   });
+  /// }
+  /// ```
+  final void Function(int newIndex, List<T> movedItems, List<T> reorderedItems) onReorder;
 
   /// Callback when selection changes
   final void Function(List<T> selectedItems)? onSelectionChanged;
@@ -132,6 +179,29 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   /// }
   /// ```
   final Widget Function(BuildContext context)? noMoreItemsBuilder;
+
+  /// Optional builder for the empty state (when items list is empty)
+  /// 
+  /// This builder is called when the items list is empty.
+  /// If not provided, the global default from [ReorderableMultiDragConfig.emptyStateBuilder]
+  /// will be used. If no global default is set, nothing will be shown.
+  /// 
+  /// Example:
+  /// ```dart
+  /// emptyStateBuilder: (context) {
+  ///   return Center(
+  ///     child: Column(
+  ///       mainAxisAlignment: MainAxisAlignment.center,
+  ///       children: [
+  ///         Icon(Icons.inbox, size: 64, color: Colors.grey),
+  ///         SizedBox(height: 16),
+  ///         Text('No items available'),
+  ///       ],
+  ///     ),
+  ///   );
+  /// }
+  /// ```
+  final Widget Function(BuildContext context)? emptyStateBuilder;
 
   /// Pagination parameters
   final int pageSize;
@@ -237,6 +307,12 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
   /// Default is 40.0 pixels.
   final double refreshIndicatorDisplacement;
   
+  /// Mode for the reorderable list
+  /// 
+  /// - [ReorderableMode.single]: Uses Flutter's built-in ReorderableListView for single item reordering
+  /// - [ReorderableMode.multi]: Uses custom implementation for multi-item selection and reordering (default)
+  final ReorderableMode mode;
+  
   /// Creates a ReorderableMultiDragList widget
   ReorderableMultiDragList({
     super.key,
@@ -267,12 +343,14 @@ class ReorderableMultiDragList<T> extends StatefulWidget {
     this.dragHandleBuilder,
     this.loadingWidgetBuilder,
     this.noMoreItemsBuilder,
+    this.emptyStateBuilder,
     this.listKey,
     this.enablePullToRefresh = false,
     this.onRefresh,
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
     this.refreshIndicatorDisplacement = 40.0,
+    this.mode = ReorderableMode.multi,
   }) : theme = theme ?? ReorderableMultiDragTheme();
 
   @override
@@ -452,13 +530,32 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
 
   void _applyReordering() {
     if (_targetPositions.isEmpty) return;
-
+    
+    // Apply reordering
     DragListUtils.applyReordering(
       items: widget.items,
       selectedItems: _selectedItems,
       originalPositions: _originalPositions,
       targetPositions: _targetPositions,
-      onReorder: widget.onReorder,
+      onReorder: (targetIndex, movedItems, reorderedItems) {
+        DebugPrintUtil.printReorder('Reordering: ${movedItems.length} items to index $targetIndex');
+        DebugPrintUtil.printReorder('Moved items count: ${movedItems.length}, Reordered list length: ${reorderedItems.length}');
+        
+        // Calculate target_id: the ID of the item that comes after the moved items
+        // targetIndex is where the moved items were inserted (first position)
+        // So the item after them is at: targetIndex + movedItems.length
+        final indexAfterMovedItems = targetIndex + movedItems.length;
+        
+        DebugPrintUtil.printReorder('Target index: $targetIndex, Items after: $indexAfterMovedItems');
+        
+        if (indexAfterMovedItems < reorderedItems.length) {
+          DebugPrintUtil.printReorder('Target item is at index $indexAfterMovedItems in reordered list');
+        } else {
+          DebugPrintUtil.printReorder('Moved to end - target_id should be last moved item (index ${movedItems.length - 1})');
+        }
+        
+        widget.onReorder(targetIndex, movedItems, reorderedItems);
+      },
     );
     
     // Clear the positions
@@ -468,16 +565,23 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
 
   /// Toggle selection of an item
   void _toggleSelection(T item) {
+    final itemIndex = widget.items.indexOf(item);
+    final wasSelected = _selectedItems.contains(item);
+    
     setState(() {
-      if (_selectedItems.contains(item)) {
+      if (wasSelected) {
         _selectedItems.remove(item);
+        DebugPrintUtil.printSelection('Deselected item at index $itemIndex (${_selectedItems.length} items now selected)');
         if (_selectedItems.isEmpty) {
           _isSelectionMode = false;
         }
       } else {
         _selectedItems.add(item);
+        DebugPrintUtil.printSelection('Selected item at index $itemIndex (${_selectedItems.length} items now selected)');
         _isSelectionMode = true;
       }
+      
+      DebugPrintUtil.printSelection('Selected indices: ${_selectedItems.map((i) => widget.items.indexOf(i)).toList()}');
       
       if (widget.onSelectionChanged != null) {
         widget.onSelectionChanged!(List<T>.from(_selectedItems));
@@ -492,6 +596,10 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
     // Cancel any previous drag operations
     _autoScrollTimer?.cancel();
     
+    final draggedItem = widget.items[index];
+    DebugPrintUtil.printDrag('Drag started at index $index (${_selectedItems.length} items selected before drag)');
+    DebugPrintUtil.printSelection('Selected items before drag: ${_selectedItems.map((item) => widget.items.indexOf(item)).toList()}');
+    
     setState(() {
       _draggedItemIndex = index;
       _dragPosition = position;
@@ -500,17 +608,19 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
       // Store original positions of all items
       _captureItemPositions();
       
-      // Store original positions of selected items
+      // Store original positions of selected items BEFORE adding dragged item
       for (final item in _selectedItems) {
         int itemIndex = widget.items.indexOf(item);
         if (itemIndex >= 0) {
           _originalPositions[item] = itemIndex;
+        } else {
+          DebugPrintUtil.printWarning('Selected item not found in items list at drag start');
         }
       }
       
       // If the dragged item is not selected, select it
-      final draggedItem = widget.items[index];
       if (!_selectedItems.contains(draggedItem)) {
+        DebugPrintUtil.printSelection('Adding dragged item at index $index to selection');
         _selectedItems.add(draggedItem);
         _isSelectionMode = true;
         _originalPositions[draggedItem] = index;
@@ -519,6 +629,10 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
           widget.onSelectionChanged!(List<T>.from(_selectedItems));
         }
       }
+      
+      DebugPrintUtil.printDrag('After drag start: ${_selectedItems.length} items selected');
+      DebugPrintUtil.printSelection('Selected items after drag start: ${_selectedItems.map((item) => widget.items.indexOf(item)).toList()}');
+      DebugPrintUtil.printSelection('Original positions: $_originalPositions');
     });
     
     _dragAnimationController.forward();
@@ -603,6 +717,8 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
   /// End dragging an item
   void _onDragEnded() {
     if (!_isDragging) return;
+    
+    DebugPrintUtil.printDrag('Drag ended, target position: ${_targetPositions.values.isNotEmpty ? _targetPositions.values.first : null}');
     
     // Cancel auto-scroll
     _autoScrollTimer?.cancel();
@@ -938,7 +1054,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
       final nextPage = (initialItemsLength / pageSize).floor() + 1;
       
       // Debug printing to help troubleshoot
-      debugPrint('Calculated and requesting page: $nextPage (items: $initialItemsLength, pageSize: $pageSize)');
+      DebugPrintUtil.printPagination('Calculated and requesting page: $nextPage (items: $initialItemsLength, pageSize: $pageSize)');
       
       // Request new page of data
       await widget.onPageRequest!(nextPage, pageSize);
@@ -951,14 +1067,14 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
           final itemsAdded = widget.items.length - initialItemsLength;
           
           // Debug printing to help troubleshoot
-          debugPrint('Items before: $initialItemsLength, after: ${widget.items.length}, added: $itemsAdded');
+          DebugPrintUtil.printPagination('Items before: $initialItemsLength, after: ${widget.items.length}, added: $itemsAdded');
           
           // If no new items were added, or we received fewer items than the page size,
           // we've likely reached the end
           if (!newItemsAdded || 
               (widget.items.length - initialItemsLength) < pageSize) {
             // _hasMoreItems = false;
-            debugPrint('No more items to load. hasMoreItems set to false');
+            DebugPrintUtil.printPagination('No more items to load. hasMoreItems set to false');
           }
           
           // Update previous length tracker
@@ -967,7 +1083,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
       }
     } catch (e) {
       // Handle errors if needed
-      debugPrint('Error loading more data: $e');
+      DebugPrintUtil.printError('Error loading more data', e);
     } finally {
       // Reset loading state if widget is still mounted
       if (mounted) {
@@ -992,7 +1108,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
         // _hasMoreItems = true;
         _isLoading = false;
         _previousItemsLength = widget.items.length;
-        debugPrint('Pagination reset: _hasMoreItems = true');
+        DebugPrintUtil.printPagination('Pagination reset: _hasMoreItems = true');
       });
     }
     
@@ -1044,7 +1160,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
         await widget.onPageRequest!(1, widget.pageSize);
       }
     } catch (e) {
-      debugPrint('Error during refresh: $e');
+      DebugPrintUtil.printError('Error during refresh', e);
     } finally {
       if (mounted) {
         setState(() {
@@ -1059,6 +1175,170 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
 
   @override
   Widget build(BuildContext context) {
+    // Check for empty state first
+    if (widget.items.isEmpty && !_isLoading) {
+      final emptyStateWidget = _buildEmptyState(context);
+      if (emptyStateWidget != null) {
+        return Column(
+          children: [
+            if (widget.headerWidget != null) widget.headerWidget!,
+            Expanded(child: emptyStateWidget),
+            if (widget.footerWidget != null) widget.footerWidget!,
+          ],
+        );
+      }
+    }
+    
+    // If single mode, use ReorderableListView
+    if (widget.mode == ReorderableMode.single) {
+      return _buildSingleMode(context);
+    }
+    
+    // Multi mode - use custom implementation
+    return _buildMultiMode(context);
+  }
+  
+  /// Build the empty state widget
+  /// Returns null if no empty state builder is configured
+  Widget? _buildEmptyState(BuildContext context) {
+    // Use widget-specific builder if provided, otherwise use global default
+    return widget.emptyStateBuilder?.call(context) ?? 
+           ReorderableMultiDragConfig.emptyStateBuilder?.call(context);
+  }
+  
+  /// Build the single mode using ReorderableListView
+  Widget _buildSingleMode(BuildContext context) {
+    // Create a list of items with keys for ReorderableListView
+    final List<Widget> children = widget.items.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      
+      return Container(
+        key: ValueKey(item),
+        margin: EdgeInsets.symmetric(
+          horizontal: widget.theme.itemHorizontalMargin,
+          vertical: widget.theme.itemVerticalMargin,
+        ),
+        decoration: BoxDecoration(
+          color: widget.theme.itemColor,
+          borderRadius: BorderRadius.circular(widget.theme.itemBorderRadius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: widget.itemBuilder(
+          context,
+          item,
+          index,
+          false, // isSelected - not applicable in single mode
+          false, // isDragging - not applicable in single mode
+        ),
+      );
+    }).toList();
+    
+    // Add loading indicator or no more items message if needed
+    if (_isLoading) {
+      children.add(
+        Container(
+          key: const ValueKey('loading'),
+          height: 80,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          alignment: Alignment.center,
+          child: widget.loadingWidgetBuilder?.call(context) ?? 
+            const CircularProgressIndicator.adaptive(),
+        ),
+      );
+    } else if (!_hasMoreItems && widget.items.isNotEmpty) {
+      children.add(
+        Container(
+          key: const ValueKey('no_more'),
+          height: 60,
+          alignment: Alignment.center,
+          child: widget.noMoreItemsBuilder?.call(context) ??
+            Text(
+              "No more items to load",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+        ),
+      );
+    }
+    
+    Widget listContent = NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        // Handle pagination on scroll
+        if (notification is ScrollEndNotification) {
+          final maxScroll = _scrollController.position.maxScrollExtent;
+          final currentScroll = _scrollController.position.pixels;
+          
+          // Load more if near the end
+          if (currentScroll >= maxScroll - 200 && !_isLoading && _hasMoreItems) {
+            _loadMoreData();
+          }
+        }
+        return false;
+      },
+      child: ReorderableListView(
+        scrollController: _scrollController,
+        onReorder: (oldIndex, newIndex) {
+          // Handle pagination items (loading indicator, no more items message)
+          if (oldIndex >= widget.items.length || newIndex >= widget.items.length) {
+            return;
+          }
+          
+          // Adjust newIndex if moving down
+          if (newIndex > oldIndex) {
+            newIndex--;
+          }
+          
+          final List<T> reorderedItems = List<T>.from(widget.items);
+          final T movedItem = reorderedItems.removeAt(oldIndex);
+          reorderedItems.insert(newIndex, movedItem);
+          
+          DebugPrintUtil.printReorder('Single mode reorder: item from index $oldIndex to $newIndex');
+          
+          // Call onReorder with new index, moved items, and reordered list
+          widget.onReorder(newIndex, [movedItem], reorderedItems);
+        },
+        children: children,
+      ),
+    );
+    
+    // Wrap with RefreshIndicator if enabled
+    if (widget.enablePullToRefresh) {
+      listContent = RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: widget.refreshIndicatorColor,
+        backgroundColor: widget.refreshIndicatorBackgroundColor,
+        displacement: widget.refreshIndicatorDisplacement,
+        child: listContent,
+      );
+    }
+    
+    return Column(
+      children: [
+        // Header widget if provided
+        if (widget.headerWidget != null) widget.headerWidget!,
+        
+        // List of items
+        Expanded(
+          child: listContent,
+        ),
+        
+        // Footer widget if provided
+        if (widget.footerWidget != null) widget.footerWidget!,
+      ],
+    );
+  }
+  
+  /// Build the multi mode using custom implementation
+  Widget _buildMultiMode(BuildContext context) {
     // Create the main list content
     Widget listView = ListView.builder(
       controller: _scrollController,
@@ -1120,7 +1400,7 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
             child: Container(
               key: key,
               margin: EdgeInsets.symmetric(
-                horizontal: widget.theme.itemHorizontalMargin,
+                horizontal: _isSelectionMode ? 0.0 : widget.theme.itemHorizontalMargin,
                 vertical: widget.theme.itemVerticalMargin,
               ),
               decoration: BoxDecoration(
@@ -1137,53 +1417,80 @@ class ReorderableMultiDragListState<T> extends State<ReorderableMultiDragList<T>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Drag handle - only show in selection mode
-                  if (_isSelectionMode) 
-                    MouseRegion(
-                      cursor: SystemMouseCursors.grab,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onVerticalDragStart: (details) {
-                          _onDragStarted(index, details.globalPosition);
-                        },
-                        onVerticalDragUpdate: (details) {
-                          _onDragUpdate(details.globalPosition);
-                        },
-                        onVerticalDragEnd: (details) {
-                          _onDragEnded();
-                        },
-                        onHorizontalDragStart: (details) {
-                          _onDragStarted(index, details.globalPosition);
-                        },
-                        onHorizontalDragUpdate: (details) {
-                          _onDragUpdate(details.globalPosition);
-                        },
-                        onHorizontalDragEnd: (details) {
-                          _onDragEnded();
-                        },
-                        child: Container(
-                          width: 44,
-                          height: widget.itemHeight,
-                          color: Colors.transparent,
-                          alignment: Alignment.center,
-                          child: widget.dragHandleBuilder?.call(context, isSelected) ??
-                            Icon(
-                              Icons.drag_handle,
-                              color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
-                              size: 24,
+                  // Combined selection and drag handle - only show in selection mode
+                  if (_isSelectionMode)
+                    GestureDetector(
+                      onTap: () => _toggleSelection(item),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.grab,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onVerticalDragStart: (details) {
+                            _onDragStarted(index, details.globalPosition);
+                          },
+                          onVerticalDragUpdate: (details) {
+                            _onDragUpdate(details.globalPosition);
+                          },
+                          onVerticalDragEnd: (details) {
+                            _onDragEnded();
+                          },
+                          onHorizontalDragStart: (details) {
+                            _onDragStarted(index, details.globalPosition);
+                          },
+                          onHorizontalDragUpdate: (details) {
+                            _onDragUpdate(details.globalPosition);
+                          },
+                          onHorizontalDragEnd: (details) {
+                            _onDragEnded();
+                          },
+                          child: Container(
+                            width: 32,
+                            height: widget.itemHeight,
+                            margin: const EdgeInsets.only(right: 4),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Checkbox indicator
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  margin: const EdgeInsets.only(bottom: 2),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected 
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.transparent,
+                                    border: Border.all(
+                                      color: isSelected 
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.grey,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: isSelected
+                                      ? Icon(
+                                          Icons.check,
+                                          size: 10,
+                                          color: Colors.white,
+                                        )
+                                      : null,
+                                ),
+                                // Drag handle icon
+                                widget.dragHandleBuilder?.call(context, isSelected) ??
+                                  Icon(
+                                    Icons.drag_handle,
+                                    size: 14,
+                                    color: isSelected 
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
+                              ],
                             ),
+                          ),
                         ),
                       ),
                     ),
-                  
-                  // Checkbox for selection
-                  if (_isSelectionMode) ...[
-                    Checkbox(
-                      value: isSelected,
-                      onChanged: (_) => _toggleSelection(item),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
                   
                   // Item content
                   Expanded(

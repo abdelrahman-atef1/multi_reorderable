@@ -40,7 +40,7 @@ class ReorderableMultiDragTheme {
     this.autoScrollThreshold = 160.0,
     this.dropTargetHeight = 4.0,
     this.dropTargetColor = Colors.blue,
-    this.itemHorizontalMargin = 8.0,
+    this.itemHorizontalMargin = 0,
     this.itemVerticalMargin = 4.0,
     this.selectedItemColor = const Color(0x442196F3), // Light blue with 27% opacity
     this.itemColor = Colors.white,

@@ -8,10 +8,18 @@ class DragListUtils {
     required Set<T> selectedItems,
     required Map<T, int> originalPositions,
     required Map<T, int> targetPositions,
-    required void Function(List<T> reorderedItems) onReorder,
+    required void Function(int newIndex, List<T> movedItems, List<T> reorderedItems) onReorder,
   }) {
     // Create a copy of the list to work with
     final List<T> newList = List<T>.from(items);
+    
+    // Get moved items sorted by original position
+    final List<T> movedItems = selectedItems.toList()
+      ..sort((a, b) {
+        final posA = originalPositions[a] ?? 0;
+        final posB = originalPositions[b] ?? 0;
+        return posA.compareTo(posB);
+      });
     
     // First, remove all selected items from their original positions
     // Sort so we remove from highest index to lowest to avoid shifting issues
@@ -26,12 +34,25 @@ class DragListUtils {
     
     // Get the target position (they should all be the same)
     if (targetPositions.isEmpty) {
-      onReorder(newList);
+      onReorder(0, movedItems, newList);
       return;
     }
     
-    // Get first target position
-    int targetPosition = targetPositions.values.first;
+    // Get first target position (this is the position BEFORE items were removed)
+    int originalTargetPosition = targetPositions.values.first;
+    
+    // Adjust target position if items were removed before it
+    // Count how many selected items were at positions before the target
+    int itemsRemovedBeforeTarget = 0;
+    for (final entry in sortedOriginal) {
+      if (entry.value < originalTargetPosition) {
+        itemsRemovedBeforeTarget++;
+      }
+    }
+    
+    // Calculate adjusted target position: subtract items removed before target
+    // This gives us the correct position in the new list (after removals)
+    int targetPosition = originalTargetPosition - itemsRemovedBeforeTarget;
     
     // Ensure the target position is within bounds after removing items
     targetPosition = targetPosition.clamp(0, newList.length);
@@ -51,8 +72,9 @@ class DragListUtils {
       }
     }
     
-    // Notify about the reordering
-    onReorder(newList);
+    // Notify about the reordering with new index and moved items
+    // Use the adjusted target position (where items were actually inserted)
+    onReorder(originalTargetPosition - itemsRemovedBeforeTarget, movedItems, newList);
   }
 
   /// Calculates the optimal stack offset for a given number of items.
