@@ -11,7 +11,7 @@ enum DragStyle {
 
   /// Animated card style
   animatedCardStyle,
-  
+
   /// Minimalist style
   minimalistStyle,
 }
@@ -42,9 +42,11 @@ class ReorderableMultiDragTheme {
     this.dropTargetColor = Colors.blue,
     this.itemHorizontalMargin = 0,
     this.itemVerticalMargin = 4.0,
-    this.selectedItemColor = const Color(0x442196F3), // Light blue with 27% opacity
+    this.selectedItemColor =
+        const Color(0x442196F3), // Light blue with 27% opacity
     this.itemColor = Colors.white,
-    this.selectionBarColor = const Color(0x442196F3), // Light blue with 27% opacity
+    this.selectionBarColor =
+        const Color(0x442196F3), // Light blue with 27% opacity
     this.dragStyle = DragStyle.stackedStyle,
   });
 

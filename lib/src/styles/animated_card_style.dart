@@ -15,28 +15,23 @@ class AnimatedCardStyle {
   }) {
     // Create a simple animation controller in the widget
     final List<Widget> cards = [];
-    
+
     // Main container dimensions
     const double containerWidth = 300.0;
     const double containerHeight = 150.0;
-    
+
     // Item dimensions
     const double itemWidth = 280.0;
     const double itemHeight = 100.0;
-    
+
     // Main item position (centered)
     const double mainItemX = (containerWidth - itemWidth) / 2;
     const double mainItemY = (containerHeight - itemHeight) / 2;
-    
+
     // Add main item (dragged item)
-    final Widget mainItemWidget = itemBuilder(
-      context, 
-      draggedItem, 
-      draggedItemIndex, 
-      true, 
-      true
-    );
-    
+    final Widget mainItemWidget =
+        itemBuilder(context, draggedItem, draggedItemIndex, true, true);
+
     cards.add(
       Positioned(
         left: mainItemX,
@@ -59,7 +54,8 @@ class AnimatedCardStyle {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.draggedItemBorderColor.withValues(alpha: 0.3),
+                      color:
+                          theme.draggedItemBorderColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -67,7 +63,8 @@ class AnimatedCardStyle {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(theme.itemBorderRadius - 2),
+                  borderRadius:
+                      BorderRadius.circular(theme.itemBorderRadius - 2),
                   child: Center(
                     child: SizedBox(
                       width: itemWidth - 16,
@@ -84,7 +81,7 @@ class AnimatedCardStyle {
         ),
       ),
     );
-    
+
     // Create backdrop count indicator if there are other selected items
     if (selectedItems.length > 1) {
       cards.add(
@@ -98,7 +95,8 @@ class AnimatedCardStyle {
               return Transform.scale(
                 scale: value,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: theme.draggedItemBorderColor,
                     borderRadius: BorderRadius.circular(12),
@@ -125,7 +123,7 @@ class AnimatedCardStyle {
         ),
       );
     }
-    
+
     // Return the animated stack
     return SizedBox(
       width: containerWidth,
@@ -136,4 +134,4 @@ class AnimatedCardStyle {
       ),
     );
   }
-} 
+}

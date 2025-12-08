@@ -1,3 +1,8 @@
+# [0.2.1]
+
+### Changed
+* Code formatting: Applied `dart format .` to ensure consistent code style across the codebase
+
 # [0.2.0]
 
 ### Added

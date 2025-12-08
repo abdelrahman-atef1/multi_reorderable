@@ -23,22 +23,25 @@ class DragStylesManager {
     // Get global position and screen info
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box == null) return const SizedBox();
-    
+
     final Size screenSize = MediaQuery.of(context).size;
-    
+
     // Calculate the width and height of the stack
     const double stackWidth = 300.0;
     final double stackHeight = itemHeight + 20.0;
-    
+
     // Position the stack directly under the finger/cursor
     // with offset to ensure visibility
     const double fingerOffset = 150.0; // Position above finger
-    final double left = dragPosition.dx - (stackWidth / 2); // Center horizontally 
+    final double left =
+        dragPosition.dx - (stackWidth / 2); // Center horizontally
     final double top = dragPosition.dy - fingerOffset; // Position above finger
-    
+
     // Apply bounds to keep on screen
-    final double boundedLeft = math.max(0, math.min(left, screenSize.width - stackWidth));
-    final double boundedTop = math.max(0, math.min(top, screenSize.height - stackHeight));
+    final double boundedLeft =
+        math.max(0, math.min(left, screenSize.width - stackWidth));
+    final double boundedTop =
+        math.max(0, math.min(top, screenSize.height - stackHeight));
 
     // Choose the appropriate style based on the theme
     Widget content;
@@ -46,7 +49,7 @@ class DragStylesManager {
       case DragStyle.stackedStyle:
         content = StackedStyle.build(
           context: context,
-          draggedItem: draggedItem, 
+          draggedItem: draggedItem,
           selectedItems: selectedItems,
           draggedItemIndex: draggedItemIndex,
           theme: theme,
@@ -56,7 +59,7 @@ class DragStylesManager {
       case DragStyle.animatedCardStyle:
         content = AnimatedCardStyle.build(
           context: context,
-          draggedItem: draggedItem, 
+          draggedItem: draggedItem,
           selectedItems: selectedItems,
           draggedItemIndex: draggedItemIndex,
           theme: theme,
@@ -66,7 +69,7 @@ class DragStylesManager {
       case DragStyle.minimalistStyle:
         content = MinimalistStyle.build(
           context: context,
-          draggedItem: draggedItem, 
+          draggedItem: draggedItem,
           selectedItems: selectedItems,
           draggedItemIndex: draggedItemIndex,
           theme: theme,
@@ -74,7 +77,7 @@ class DragStylesManager {
         );
         break;
     }
-    
+
     // Create the final positioned element
     return Positioned(
       left: boundedLeft,
@@ -88,4 +91,4 @@ class DragStylesManager {
       ),
     );
   }
-} 
+}

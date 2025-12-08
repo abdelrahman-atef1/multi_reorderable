@@ -16,11 +16,11 @@ class MinimalistStyle {
     // Container dimensions
     const double containerWidth = 280.0;
     const double containerHeight = 120.0;
-    
+
     // Item dimensions
     const double itemWidth = 260.0;
     const double itemHeight = 80.0;
-    
+
     // Create the main item widget
     final Widget mainItemWidget = itemBuilder(
       context,
@@ -29,10 +29,10 @@ class MinimalistStyle {
       true,
       true,
     );
-    
+
     // Create widget list
     final List<Widget> elements = [];
-    
+
     // Add the main container
     elements.add(
       Positioned(
@@ -68,7 +68,7 @@ class MinimalistStyle {
         ),
       ),
     );
-    
+
     // Add subtle decorative elements based on selected count
     if (selectedItems.length > 1) {
       // Add selection indicator line
@@ -86,7 +86,7 @@ class MinimalistStyle {
           ),
         ),
       );
-      
+
       // Add selection count pill
       elements.add(
         Positioned(
@@ -110,7 +110,7 @@ class MinimalistStyle {
         ),
       );
     }
-    
+
     // Return the complete widget
     return SizedBox(
       width: containerWidth,
@@ -121,4 +121,4 @@ class MinimalistStyle {
       ),
     );
   }
-} 
+}

@@ -15,33 +15,32 @@ class StackedStyle {
     required Widget Function(BuildContext, T, int, bool, bool) itemBuilder,
   }) {
     final List<Widget> stackItems = [];
-    
+
     // Base dimensions for the stack
     const double itemWidth = 300.0;
     const double itemHeight = 80.0;
     const double contentWidth = itemWidth * 0.95;
     const double contentHeight = itemHeight * 0.9;
-    
+
     // Stack offset constants
     const double stackOffsetVertical = 15.0; // pixels
     const double stackOffsetHorizontal = 10.0; // pixels
-    
+
     // Get all selected items in order (except the dragged one)
-    final filteredItems = selectedItems
-        .where((item) => item != draggedItem)
-        .toList();
-    
+    final filteredItems =
+        selectedItems.where((item) => item != draggedItem).toList();
+
     // Add all selected items to the stack
     for (int i = 0; i < filteredItems.length; i++) {
       final item = filteredItems[i];
       final itemIndex = selectedItems.indexOf(item);
-      
+
       if (itemIndex < 0) continue;
-      
+
       // Calculate the position in the stack (0 is bottom, length-1 is top)
       final int stackPosition = i;
       final int stackTotal = filteredItems.length;
-      
+
       // Build the item widget
       final Widget itemWidget = itemBuilder(
         context,
@@ -50,15 +49,15 @@ class StackedStyle {
         true,
         false,
       );
-      
+
       // Calculate offset based on position in stack - no rotation
       // Items stack neatly behind the main item
       final int relativePos = stackTotal - stackPosition;
-      
+
       // Calculate precise offsets for a simple staggered arrangement
       final double xOffset = stackOffsetHorizontal * relativePos;
       final double yOffset = stackOffsetVertical * relativePos;
-      
+
       // Create a widget for this item in the stack
       stackItems.add(
         Transform.translate(
@@ -103,7 +102,7 @@ class StackedStyle {
         ),
       );
     }
-    
+
     // Build the dragged item widget
     final Widget draggedItemWidget = itemBuilder(
       context,
@@ -112,7 +111,7 @@ class StackedStyle {
       true,
       true,
     );
-    
+
     // Add the dragged item on top
     stackItems.add(
       Container(
@@ -152,11 +151,13 @@ class StackedStyle {
         ),
       ),
     );
-    
+
     // Calculate total stack size
-    final double stackWidth = itemWidth + (stackOffsetHorizontal * filteredItems.length);
-    final double stackHeight = itemHeight + (stackOffsetVertical * filteredItems.length) + 15;
-    
+    final double stackWidth =
+        itemWidth + (stackOffsetHorizontal * filteredItems.length);
+    final double stackHeight =
+        itemHeight + (stackOffsetVertical * filteredItems.length) + 15;
+
     // Create the final stack with fixed dimensions
     return SizedBox(
       width: stackWidth,
@@ -168,4 +169,4 @@ class StackedStyle {
       ),
     );
   }
-} 
+}

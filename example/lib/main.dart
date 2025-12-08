@@ -43,13 +43,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  
+
   final List<Widget> _screens = [
     const ExampleScreen(),
     const AdvancedExampleScreen(),
     const PaginationExampleScreen(),
   ];
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +101,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
   // Selected items
   List<ItemData> selectedItems = [];
-  
+
   // Current drag style
   DragStyle _currentDragStyle = DragStyle.stackedStyle;
 
@@ -118,7 +118,8 @@ class _ExampleScreenState extends State<ExampleScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                const Text('Drag Style:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Drag Style:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButton<DragStyle>(
@@ -131,7 +132,8 @@ class _ExampleScreenState extends State<ExampleScreen> {
                         });
                       }
                     },
-                    items: DragStyle.values.map<DropdownMenuItem<DragStyle>>((DragStyle style) {
+                    items: DragStyle.values
+                        .map<DropdownMenuItem<DragStyle>>((DragStyle style) {
                       return DropdownMenuItem<DragStyle>(
                         value: style,
                         child: Text(_getDragStyleDisplayName(style)),
@@ -200,7 +202,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
       ),
     );
   }
-  
+
   // Helper method to get a user-friendly name for drag styles
   String _getDragStyleDisplayName(DragStyle style) {
     switch (style) {
@@ -323,7 +325,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Advanced usage example with custom builders and theme
             Expanded(
               child: ReorderableMultiDragList<TaskItem>(
@@ -352,10 +354,11 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                     }
                     selectedTasks = [];
                   });
-                  
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Marked ${selected.length} tasks as completed'),
+                      content:
+                          Text('Marked ${selected.length} tasks as completed'),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -370,20 +373,14 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                 theme: customTheme,
                 dragAnimationDuration: const Duration(milliseconds: 200),
                 reorderAnimationDuration: const Duration(milliseconds: 300),
-                headerWidget: _buildCustomHeader(context, selectedTasks, selectedTasks.isNotEmpty),
-                footerWidget: selectedTasks.isNotEmpty 
-                    ? _buildCustomFooter(
-                        context, 
-                        selectedTasks, 
-                        true, 
-                        () => _markTasksAsCompleted(selectedTasks)
-                      )
+                headerWidget: _buildCustomHeader(
+                    context, selectedTasks, selectedTasks.isNotEmpty),
+                footerWidget: selectedTasks.isNotEmpty
+                    ? _buildCustomFooter(context, selectedTasks, true,
+                        () => _markTasksAsCompleted(selectedTasks))
                     : null,
-                dragHandleBuilder: (context, isSelected) => _buildCustomDragHandle(
-                  context, 
-                  isSelected, 
-                  false
-                ),
+                dragHandleBuilder: (context, isSelected) =>
+                    _buildCustomDragHandle(context, isSelected, false),
                 selectionBarBuilder: (context, selectedCount, onDone) {
                   return const SizedBox();
                 },
@@ -420,9 +417,10 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                      color: task.isCompleted 
-                          ? Theme.of(context).colorScheme.outline 
+                      decoration:
+                          task.isCompleted ? TextDecoration.lineThrough : null,
+                      color: task.isCompleted
+                          ? Theme.of(context).colorScheme.outline
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -445,8 +443,8 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
                 task.description,
                 style: TextStyle(
                   fontSize: 14,
-                  color: task.isCompleted 
-                      ? Theme.of(context).colorScheme.outline 
+                  color: task.isCompleted
+                      ? Theme.of(context).colorScheme.outline
                       : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 maxLines: 2,
@@ -478,7 +476,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     bool isSelectionMode,
   ) {
     if (!isSelectionMode) return const SizedBox.shrink();
-    
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -498,8 +496,8 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
           Text(
             'Selection Mode',
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ],
       ),
@@ -513,7 +511,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
     VoidCallback onDone,
   ) {
     if (!isSelectionMode) return const SizedBox.shrink();
-    
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -560,7 +558,10 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
         Icons.drag_indicator,
         color: isDragging
             ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            : Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.7),
         size: 24,
       ),
     );
@@ -570,7 +571,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
   Widget _getPriorityIcon(TaskPriority priority) {
     IconData iconData;
     Color color;
-    
+
     switch (priority) {
       case TaskPriority.low:
         iconData = Icons.arrow_downward;
@@ -585,7 +586,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
         color = Colors.red;
         break;
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(4.0),
       decoration: BoxDecoration(
@@ -603,7 +604,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
-    
+
     if (difference == 0) {
       return 'Today';
     } else if (difference == 1) {
@@ -646,7 +647,7 @@ class _AdvancedExampleScreenState extends State<AdvancedExampleScreen> {
       }
       selectedTasks = [];
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Marked ${tasksToComplete.length} tasks as completed'),
@@ -714,16 +715,17 @@ class PaginationExampleScreen extends StatefulWidget {
   const PaginationExampleScreen({super.key});
 
   @override
-  State<PaginationExampleScreen> createState() => _PaginationExampleScreenState();
+  State<PaginationExampleScreen> createState() =>
+      _PaginationExampleScreenState();
 }
 
 class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
   // Sample data with pagination
   List<ItemData> items = [];
-  
+
   // Create a global key to access the list state
   final listKey = GlobalKey<ReorderableMultiDragListState<ItemData>>();
-  
+
   // Pagination settings
   final int pageSize = 15;
   int totalItems = 200; // simulate a large dataset
@@ -741,10 +743,10 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
     setState(() {
       isLoading = true;
     });
-    
+
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() {
       // Generate initial items
       items = List.generate(
@@ -764,18 +766,18 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
   Future<void> _loadMoreData(int page, int pageSize) async {
     // Skip if we've loaded all items
     if (items.length >= totalItems) return;
-    
+
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     setState(() {
       // Calculate the start index for the next page
       final startIndex = items.length;
       // Determine how many more items to add (handle reaching the end)
-      final itemsToAdd = (startIndex + pageSize > totalItems) 
-          ? totalItems - startIndex 
+      final itemsToAdd = (startIndex + pageSize > totalItems)
+          ? totalItems - startIndex
           : pageSize;
-      
+
       // Add new items
       items.addAll(
         List.generate(
@@ -799,10 +801,10 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
     setState(() {
       isLoading = true;
     });
-    
+
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() {
       // Generate fresh items
       items = List.generate(
@@ -816,10 +818,10 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
       );
       isLoading = false;
     });
-    
+
     // Refresh the list widget
     listKey.currentState?.refreshItems(resetPagination: true);
-    
+
     // Show success message
     // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
@@ -876,7 +878,8 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                         ],
                       );
                     },
-                    itemBuilder: (context, item, index, isSelected, isDragging) {
+                    itemBuilder:
+                        (context, item, index, isSelected, isDragging) {
                       return ListTile(
                         title: Text(item.title),
                         subtitle: Text(item.subtitle),
@@ -892,8 +895,10 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                       });
                     },
                     headerWidget: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: const Text(
                         'Scroll down to load more items',
                         style: TextStyle(fontStyle: FontStyle.italic),
@@ -910,7 +915,8 @@ class _PaginationExampleScreenState extends State<PaginationExampleScreen> {
                       ),
                     ),
                     theme: ReorderableMultiDragTheme(
-                      draggedItemBorderColor: Theme.of(context).colorScheme.primary,
+                      draggedItemBorderColor:
+                          Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
