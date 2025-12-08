@@ -931,8 +931,9 @@ class ReorderableMultiDragListState<T>
 
   /// Build a stack of selected items for dragging
   Widget _buildDraggedStack(BuildContext context) {
-    if (_draggedItemIndex == null || _dragPosition == null)
+    if (_draggedItemIndex == null || _dragPosition == null) {
       return const SizedBox();
+    }
 
     final draggedItem = widget.items[_draggedItemIndex!];
     final dragPosition = _dragPosition!;
