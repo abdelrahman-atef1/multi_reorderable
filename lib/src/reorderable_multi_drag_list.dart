@@ -1332,6 +1332,9 @@ class ReorderableMultiDragListState<T>
       },
       child: ReorderableListView(
         scrollController: _scrollController,
+        physics: widget.enablePullToRefresh
+            ? const AlwaysScrollableScrollPhysics()
+            : null,
         onReorder: (oldIndex, newIndex) {
           // Handle pagination items (loading indicator, no more items message)
           if (oldIndex >= widget.items.length ||
@@ -1390,6 +1393,9 @@ class ReorderableMultiDragListState<T>
     // Create the main list content
     Widget listView = ListView.builder(
       controller: _scrollController,
+      physics: widget.enablePullToRefresh
+          ? const AlwaysScrollableScrollPhysics()
+          : null,
       itemCount: widget.items.length +
           (_isLoading || !_hasMoreItems && widget.items.isNotEmpty ? 1 : 0),
       itemBuilder: (context, index) {

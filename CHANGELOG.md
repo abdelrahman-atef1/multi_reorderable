@@ -1,3 +1,9 @@
+# [0.2.2]
+
+### Fixed
+* Fixed pull-to-refresh not working when the list isn't scrollable (items don't fill viewport height)
+* Added `AlwaysScrollableScrollPhysics()` to both single and multi modes when pull-to-refresh is enabled to ensure RefreshIndicator works even when content doesn't overflow
+
 # [0.2.1]
 
 ### Changed
